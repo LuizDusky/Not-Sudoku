@@ -21,6 +21,8 @@ const cancelModalBtn = document.getElementById('cancelModalBtn');
 const undoBtn = document.getElementById('undoBtn');
 const redoBtn = document.getElementById('redoBtn');
 const gameMetaText = document.getElementById('gameMetaText');
+const notesToggleLabel = document.querySelector('label[for="notesToggle"]');
+const themeToggleLabel = document.querySelector('label[for="themeToggle"]');
 
 const DEFAULT_PREFS = {
   theme: 'light',
@@ -137,12 +139,14 @@ async function loadPreferences() {
 function applyTheme(theme) {
   document.body.classList.toggle('dark', theme === 'dark');
   themeToggle.checked = theme === 'dark';
+  syncToggleKnob(themeToggle, themeToggleLabel);
 }
 
 function setNotesMode(on, { save = true, announce = false } = {}) {
   const currentActive = activeNumber;
   notesMode = on;
   notesToggle.checked = on;
+  syncToggleKnob(notesToggle, notesToggleLabel);
   document.body.classList.toggle('notes-mode', on);
   if (announce) showStatus(on ? 'Notes mode on' : 'Notes mode off');
   if (currentActive) {
@@ -420,6 +424,17 @@ function attachEvents() {
     applyTheme(themeToggle.checked ? 'dark' : 'light');
     persistPreferences();
   });
+  if (notesToggle && notesToggleLabel) {
+    setupDraggableToggle(notesToggle, notesToggleLabel, (checked) =>
+      setNotesMode(checked, { announce: true })
+    );
+  }
+  if (themeToggle && themeToggleLabel) {
+    setupDraggableToggle(themeToggle, themeToggleLabel, (checked) => {
+      applyTheme(checked ? 'dark' : 'light');
+      persistPreferences();
+    });
+  }
   difficultySelect.addEventListener('change', persistPreferences);
   hintBtn.addEventListener('click', showHint);
 }
@@ -807,6 +822,106 @@ function runDealAnimation(puzzle, onComplete) {
       }, duration);
     }, idx * 70);
   });
+}
+
+function syncToggleKnob(inputEl, labelEl) {
+  if (!inputEl || !labelEl) return;
+  const styles = getComputedStyle(labelEl);
+  const pad = parseFloat(styles.getPropertyValue('--pad')) || 0;
+  const knobW =
+    parseFloat(styles.getPropertyValue('--knob-w')) ||
+    labelEl.offsetHeight - pad * 2 ||
+    0;
+  const maxShift = Math.max(labelEl.offsetWidth - knobW - pad * 2, 0);
+  const shift = inputEl.checked ? maxShift : 0;
+  labelEl.style.setProperty('--knob-shift', `${shift}px`);
+}
+
+function setupDraggableToggle(inputEl, labelEl, onChange) {
+  let dragging = false;
+  let pad = 0;
+  let knobW = 0;
+  let maxShift = 0;
+  let rectLeft = 0;
+  let latestPointerId = null;
+  let lastPreview = inputEl?.checked ?? false;
+
+  const computeGeometry = () => {
+    const styles = getComputedStyle(labelEl);
+    pad = parseFloat(styles.getPropertyValue('--pad')) || 0;
+    knobW =
+      parseFloat(styles.getPropertyValue('--knob-w')) ||
+      labelEl.offsetHeight - pad * 2 ||
+      0;
+    maxShift = Math.max(labelEl.offsetWidth - knobW - pad * 2, 0);
+    rectLeft = labelEl.getBoundingClientRect().left;
+  };
+
+  const syncKnob = () => {
+    syncToggleKnob(inputEl, labelEl);
+  };
+
+  const endDrag = (nextChecked) => {
+    dragging = false;
+    if (latestPointerId !== null) {
+      labelEl.releasePointerCapture?.(latestPointerId);
+    }
+    latestPointerId = null;
+    if (nextChecked === null) {
+      syncKnob();
+      labelEl.classList.remove('dragging', 'dragging-on', 'dragging-off');
+      return;
+    }
+    const changed = inputEl.checked !== nextChecked;
+    inputEl.checked = nextChecked;
+    labelEl.style.setProperty('--knob-shift', `${nextChecked ? maxShift : 0}px`);
+    if (changed) {
+      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    labelEl.classList.remove('dragging', 'dragging-on', 'dragging-off');
+  };
+
+  labelEl.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    computeGeometry();
+    dragging = true;
+    lastPreview = inputEl.checked;
+    latestPointerId = e.pointerId;
+    labelEl.setPointerCapture?.(e.pointerId);
+    labelEl.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  labelEl.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
+    labelEl.style.setProperty('--knob-shift', `${shift}px`);
+    const previewOn = shift >= maxShift / 2;
+    labelEl.classList.toggle('dragging-on', previewOn);
+    labelEl.classList.toggle('dragging-off', !previewOn);
+    if (previewOn !== lastPreview) {
+      lastPreview = previewOn;
+      inputEl.checked = previewOn;
+      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    e.preventDefault();
+  });
+
+  labelEl.addEventListener('pointerup', (e) => {
+    if (!dragging) return;
+    const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
+    const shouldCheck = shift >= maxShift / 2;
+    labelEl.style.setProperty('--knob-shift', `${shouldCheck ? maxShift : 0}px`);
+    endDrag(shouldCheck);
+    e.preventDefault();
+  });
+
+  labelEl.addEventListener('pointercancel', () => {
+    if (!dragging) return;
+    endDrag(null);
+  });
+
+  syncKnob();
 }
 
 function runWinSweepAnimation(done) {
