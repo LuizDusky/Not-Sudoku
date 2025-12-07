@@ -1402,4 +1402,12 @@ body.loading-game .toggles-panel {
   .icon-btn .label {
     font-size: 11px;
   }
+
+  .cell {
+    transition: background 60ms ease, box-shadow 60ms ease, border 60ms ease, transform 80ms ease;
+  }
+
+  .cell.selected {
+    animation: none;
+  }
 }
