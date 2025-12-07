@@ -13,7 +13,7 @@
   </head>
   <body>
     <div class="layout">
-      <aside class="sidebar">
+      <div class="header-mobile">
         <div class="theme-switch mobile-float">
           <input type="checkbox" id="themeToggle" />
           <label for="themeToggle" class="toggle segmented" aria-label="Toggle theme">
@@ -25,7 +25,14 @@
             </span>
           </label>
         </div>
-
+        <div class="meta-chip difficulty" aria-label="Dificuldade">
+          <span id="gameDifficulty">Medium</span>
+        </div>
+        <div class="meta-chip time" aria-label="Tempo decorrido">
+          <span id="timer">00:00</span>
+        </div>
+      </div>
+      <aside class="sidebar">
         <div class="actions">
           <button id="newGameBtn" class="icon-btn">
             <span class="icon" aria-hidden="true">
@@ -57,16 +64,6 @@
       </aside>
 
       <main class="main-pane">
-        <div class="game-meta">
-          <div class="meta-grid">
-            <div class="meta-chip difficulty" aria-label="Dificuldade">
-              <span id="gameDifficulty">Medium</span>
-            </div>
-            <div class="meta-chip time" aria-label="Tempo decorrido">
-              <span id="timer">00:00</span>
-            </div>
-          </div>
-        </div>
         <section class="board-section">
           <div id="loadingIndicator" class="loading-indicator" role="status" aria-live="polite" aria-hidden="true">
             <div class="spinner" aria-hidden="true"></div>
