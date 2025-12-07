@@ -1157,6 +1157,65 @@ body:not(.dark) .cell.empty-cell {
   }
 }
 
+@media (max-height: 760px) {
+  body {
+    overflow-y: auto;
+  }
+
+  .layout {
+    height: auto;
+    min-height: auto;
+    padding: 12px 8px 20px;
+  }
+
+  .main-pane {
+    align-items: flex-start;
+  }
+
+  .board-section {
+    padding: 4px 0 6px;
+  }
+
+  .toggles-panel,
+  .numbers-panel,
+  .actions {
+    position: static;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    margin: 6px auto 0;
+    justify-content: center;
+  }
+
+  .numbers-panel {
+    height: auto;
+  }
+
+  .actions {
+    height: auto;
+    gap: 4px;
+  }
+
+  .toggles-panel .toggle.segmented {
+    --toggle-w: 84px;
+    --toggle-h: 32px;
+  }
+
+  .numbers-panel .num-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .actions .icon-btn {
+    padding: 6px 4px;
+    border-radius: 10px;
+    gap: 4px;
+    font-size: 10px;
+  }
+}
+
 @media (max-width: 780px) {
   main {
     padding: 12px;
@@ -1179,7 +1238,7 @@ body:not(.dark) .cell.empty-cell {
     --note-font-size: clamp(10px, 2.6vw, 15px);
     --mobile-grid-size: 520px;
     --mobile-grid-offset-x: -3px;
-    --mobile-grid-offset-y: -40px;
+    --mobile-grid-offset-y: 0px;
     --mobile-toggle-lift: 100px;
   }
 
