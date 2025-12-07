@@ -1179,7 +1179,7 @@ body:not(.dark) .cell.empty-cell {
     --note-font-size: clamp(10px, 2.6vw, 15px);
     --mobile-grid-size: 520px;
     --mobile-grid-offset-x: -3px;
-    --mobile-grid-offset-y: 5px;
+    --mobile-grid-offset-y: -40px;
     --mobile-toggle-lift: 100px;
   }
 
