@@ -22,7 +22,6 @@ const undoBtn = document.getElementById('undoBtn');
 const redoBtn = document.getElementById('redoBtn');
 const gameMetaText = document.getElementById('gameMetaText');
 const gameDifficultyEl = document.getElementById('gameDifficulty');
-const gameCodeEl = document.getElementById('gameCode');
 const notesToggleLabel = document.querySelector('label[for="notesToggle"]');
 const themeToggleLabel = document.querySelector('label[for="themeToggle"]');
 
@@ -166,9 +165,6 @@ function updateGameMeta(meta) {
   const diffLabel = diff.charAt(0).toUpperCase() + diff.slice(1);
   if (gameDifficultyEl) {
     gameDifficultyEl.textContent = diffLabel;
-  }
-  if (gameCodeEl) {
-    gameCodeEl.textContent = `Game #${id}`;
   }
   if (gameMetaText) {
     gameMetaText.textContent = `${diffLabel} #${id}`;
@@ -953,6 +949,15 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   const wrapper = labelEl.parentElement;
   if (wrapper && wrapper !== labelEl) {
     wrapper.addEventListener('click', (e) => {
+      if (labelEl.contains(e.target)) return;
+      e.preventDefault();
+      endDrag(!inputEl.checked);
+    });
+  }
+
+  const outer = labelEl.closest('.theme-switch, .toggle-row');
+  if (outer && outer !== wrapper) {
+    outer.addEventListener('click', (e) => {
       if (labelEl.contains(e.target)) return;
       e.preventDefault();
       endDrag(!inputEl.checked);

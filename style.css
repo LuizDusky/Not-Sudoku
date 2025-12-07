@@ -4,7 +4,7 @@
   --panel-strong: rgba(255, 255, 255, 0.9);
   --border: rgba(255, 255, 255, 0.45);
   --border-strong: rgba(120, 130, 160, 0.35);
-  --grid-bg: rgba(255, 255, 255, 0.4);
+  --grid-bg: rgba(215, 220, 232, 0.9);
   --text: #111827;
   --muted: #6b7280;
   --accent: #7a7a7a;
@@ -298,7 +298,7 @@ body {
 .icon-btn {
   border: 1px solid var(--border-strong);
   border-radius: 16px;
-  padding: 12px 10px;
+  padding: 10px 8px;
   background: color-mix(in srgb, var(--panel-strong) 90%, rgba(255, 255, 255, 0.2) 10%);
   color: var(--text);
   display: flex;
@@ -323,7 +323,7 @@ body {
 }
 
 .icon-btn .label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -652,7 +652,7 @@ body.dealing-active .board-section {
   gap: 8px;
   padding: 0 14px;
   width: 100%;
-  max-width: 540px;
+  max-width: 420px;
   margin: 0 auto;
   pointer-events: auto;
 }
@@ -686,13 +686,6 @@ body.dealing-active .board-section {
 
 .meta-chip.difficulty {
   align-self: center;
-}
-
-.meta-chip.game-code {
-  min-width: 128px;
-  position: absolute;
-  top: 0;
-  right: 14px;
 }
 
 .meta-chip.time {
@@ -1152,7 +1145,7 @@ body.loading-game .toggles-panel {
 @media (max-width: 900px) and (orientation: portrait) {
   :root {
     --mobile-stack-gap: clamp(12px, 4vw, 18px);
-    --mobile-actions-h: clamp(56px, 10vw, 68px);
+    --mobile-actions-h: clamp(42px, 8vw, 52px);
     --mobile-keypad-h: clamp(54px, 10vw, 70px);
     --mobile-toggle-h: clamp(40px, 8vw, 46px);
     --cell-gap: 3px;
@@ -1185,15 +1178,33 @@ body.loading-game .toggles-panel {
 
   .game-meta {
     top: 16px;
-    transform: translateY(-4px);
+    transform: none;
     left: 0;
     right: 0;
-    margin: 0 auto;
+    margin: 0;
+    justify-content: center;
   }
 
   .game-meta .meta-grid {
     gap: 8px;
-    grid-template-columns: 1fr auto auto;
+    flex-direction: row;
+    max-width: none;
+    width: 100%;
+    padding: 0 12px;
+    position: relative;
+  }
+
+  .meta-chip.difficulty {
+    margin: 0 auto;
+    position: relative;
+    left: 0;
+    right: 0;
+  }
+
+  .meta-chip.time {
+    position: absolute;
+    right: 12px;
+    top: 0;
   }
 
   .meta-chip {
@@ -1240,17 +1251,17 @@ body.loading-game .toggles-panel {
     justify-content: center;
     align-items: center;
     margin: 0 auto;
-    padding: 18px 0 0;
+    padding: 20px 0 14px;
     border-radius: 0;
     box-shadow: none;
     background: none;
   }
 
   .grid {
-    width: min(94vw, 560px);
-    height: min(94vw, 560px);
-    max-width: 560px;
-    max-height: 560px;
+    width: min(96vw, 600px);
+    height: min(96vw, 600px);
+    max-width: 600px;
+    max-height: 600px;
     aspect-ratio: 1 / 1;
     padding: var(--cell-gap);
     border-radius: 18px;
@@ -1354,6 +1365,10 @@ body.loading-game .toggles-panel {
     transform: translateX(calc((var(--key-size) + var(--key-gap)) / 2));
   }
 
+  .number-pad .num-btn:nth-child(n+5) {
+    transform: none;
+  }
+
   .actions {
     position: fixed;
     bottom: var(--mobile-stack-gap);
@@ -1373,9 +1388,10 @@ body.loading-game .toggles-panel {
   .actions .icon-btn {
     flex: 1 1 0;
     min-width: 0;
-    padding: 10px 8px;
-    gap: 6px;
-    border-radius: 14px;
+    padding: 6px 4px;
+    gap: 4px;
+    border-radius: 10px;
+    font-size: 10px;
   }
 
   .icon-btn .icon svg {
