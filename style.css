@@ -90,6 +90,10 @@ body {
   overscroll-behavior: none;
 }
 
+html {
+  background: var(--bg);
+}
+
 .top-brand {
   display: none;
 }
