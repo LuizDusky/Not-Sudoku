@@ -207,11 +207,15 @@ function setupWakeLock() {
 }
 
 function updateThemeMeta(theme) {
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (!meta) return;
   const light = '#eef1f7';
   const dark = '#0a0b0c';
-  meta.setAttribute('content', theme === 'dark' ? dark : light);
+  const current = theme === 'dark' ? dark : light;
+  const metaMain = document.getElementById('themeColor');
+  const metaLight = document.getElementById('themeColorLight');
+  const metaDark = document.getElementById('themeColorDark');
+  if (metaMain) metaMain.setAttribute('content', current);
+  if (metaLight) metaLight.setAttribute('content', light);
+  if (metaDark) metaDark.setAttribute('content', dark);
 }
 
 function snapshotBoard() {
