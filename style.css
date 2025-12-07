@@ -25,6 +25,9 @@
   --tile-radius: 14px;
   --tile-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --tile-active: color-mix(in srgb, #dcdcdc 70%, #f7f7f7 30%);
+  /* Light mode knob: match the theme toggle pill from the light reference */
+  --toggle-knob: color-mix(in srgb, #44484f 80%, #2d2f34 20%);
+  --toggle-track: color-mix(in srgb, var(--panel-strong) 94%, rgba(255, 255, 255, 0.16));
 }
 
 body.dark {
@@ -48,7 +51,9 @@ body.dark {
   --tile-border: rgba(255, 255, 255, 0.12);
   --tile-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --tile-active: color-mix(in srgb, #27292d 70%, #2f3237 30%);
-  --toggle-knob: var(--muted);
+  /* Dark mode knob: match the notes toggle pill from the dark reference */
+  --toggle-knob: color-mix(in srgb, #d9dce4 82%, #b0b6c3 18%);
+  --toggle-track: color-mix(in srgb, var(--panel-strong) 78%, rgba(0, 0, 0, 0.35));
 }
 
 * {
@@ -56,13 +61,11 @@ body.dark {
 }
 
 button,
-.toggle.segmented,
 .pill-option {
   transition: transform 0.12s ease;
 }
 
 button:active,
-.toggle.segmented:active,
 .pill-option:active,
 .icon-btn:active,
 .num-btn:active,
@@ -91,8 +94,8 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: 240px auto 240px;
-  column-gap: 32px;
+  grid-template-columns: 220px auto 220px;
+  column-gap: 40px;
   min-height: 100vh;
   height: 100vh;
   max-width: 1140px;
@@ -101,7 +104,7 @@ body {
   justify-content: center;
   justify-items: center;
   padding: 32px 32px 32px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sidebar {
@@ -153,6 +156,7 @@ body {
   --toggle-h: 42px;
   --knob-w: calc(var(--toggle-w) / 2 - var(--pad));
   --knob-h: calc(100% - var(--pad) * 2);
+  --knob-shift: 0px;
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -161,7 +165,7 @@ body {
   height: var(--toggle-h);
   padding: var(--pad);
   border-radius: calc(var(--toggle-h) / 2);
-  background: var(--tile-bg);
+  background: var(--toggle-track, var(--tile-bg));
   border: 1px solid var(--tile-border);
   box-shadow: none;
   cursor: pointer;
@@ -190,6 +194,7 @@ body {
   background: var(--toggle-knob, var(--muted));
   box-shadow: none;
   transition: transform 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  transform: translateX(var(--knob-shift));
 }
 
 .toggle.segmented .option {
@@ -213,9 +218,18 @@ body {
 
 .toggle-row input:checked + .toggle.segmented::after,
 .theme-switch input:checked + .toggle.segmented::after {
-  transform: translateX(calc(var(--toggle-w) - var(--knob-w) - var(--pad) * 2 - 2px));
-  background: color-mix(in srgb, var(--accent) 22%, var(--panel-strong) 78%);
+  --knob-shift: calc(var(--toggle-w) - var(--knob-w) - var(--pad) * 2 - 2px);
+  background: var(--toggle-knob, var(--muted));
   box-shadow: 0 12px 22px rgba(0, 0, 0, 0.12);
+}
+
+.toggle.segmented:active {
+  transform: none;
+}
+
+.toggle.segmented:active::after,
+.toggle.segmented.dragging::after {
+  transform: translateX(var(--knob-shift)) scale(0.96);
 }
 
 .toggle-row input:checked + .toggle.segmented .option.on,
@@ -281,19 +295,18 @@ body {
 }
 
 .icon-btn {
-  border: none;
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
   padding: 12px 10px;
-  background: color-mix(in srgb, var(--panel-strong) 82%, rgba(255, 255, 255, 0.2) 18%);
+  background: color-mix(in srgb, var(--panel-strong) 90%, rgba(255, 255, 255, 0.2) 10%);
   color: var(--text);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-  transition: box-shadow 0.12s ease, border 0.12s ease, background 0.12s ease;
-  border: 1px solid var(--border);
+  box-shadow: none;
+  transition: border 0.12s ease, background 0.12s ease;
   min-width: 90px;
 }
 
@@ -315,61 +328,10 @@ body {
 }
 
 .icon-btn:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
   border-color: var(--accent-soft);
 }
 
-.stats .stat {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  color: var(--text);
-}
-
-.stats .stat span {
-  color: var(--muted);
-}
-
-.stats .stat.single {
-  justify-content: center;
-  gap: 10px;
-}
-
-.stats {
-  position: fixed;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  background: var(--tile-bg);
-  border: 1px solid var(--tile-border);
-  box-shadow: var(--tile-shadow);
-  border-radius: var(--tile-radius);
-  padding: 10px 18px;
-  width: auto;
-  min-width: 170px;
-  backdrop-filter: blur(12px) saturate(130%);
-  opacity: 1;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.stats .stat {
-  padding: 0;
-}
-
-body.dealing-active .stats {
-  opacity: 0;
-  transform: translate(-50%, 12px);
-  pointer-events: none;
-}
-
-body:not(.timer-ready) .stats {
-  opacity: 0;
-  transform: translate(-50%, 12px);
-  pointer-events: none;
-}
-
-.numbers-panel .panel-title,
-.stats .panel-title {
+.numbers-panel .panel-title {
   display: none;
 }
 
@@ -403,19 +365,19 @@ body:not(.timer-ready) .stats {
   font-weight: 700;
   font-size: 17px;
   padding: 0;
-  border: 1px solid var(--tile-border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--tile-radius);
-  background: var(--tile-bg);
+  background: color-mix(in srgb, var(--panel-strong) 90%, rgba(255, 255, 255, 0.2) 10%);
   color: color-mix(in srgb, var(--text) 60%, var(--muted) 40%);
   cursor: pointer;
-  box-shadow: var(--tile-shadow);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, border 0.12s ease, background 0.12s ease;
+  box-shadow: none;
+  transition: transform 0.12s ease, border 0.12s ease, background 0.12s ease;
 }
 
 .num-btn.active {
-  background: var(--tile-active);
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 2px var(--accent-soft), var(--tile-shadow);
+  background: color-mix(in srgb, var(--highlight) 15%, var(--panel-strong) 85%);
+  border-color: var(--highlight);
+  box-shadow: inset 0 0 0 1px var(--highlight);
   color: var(--text);
   transform: translateY(-1px);
 }
@@ -528,7 +490,7 @@ body.dealing-active .num-btn {
   padding: 18px;
   border: 1px solid var(--border);
   min-width: 320px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
+  box-shadow: none;
   backdrop-filter: blur(16px) saturate(140%);
 }
 
@@ -584,8 +546,9 @@ body.dealing-active .num-btn {
 .pill-option input:checked + span {
   color: var(--text);
   font-weight: 700;
-  background: color-mix(in srgb, var(--accent-soft) 70%, var(--panel-strong) 30%);
-  box-shadow: inset 0 0 0 1px var(--accent), 0 10px 24px rgba(0, 0, 0, 0.12);
+  background: color-mix(in srgb, var(--highlight) 15%, var(--panel-strong) 85%);
+  border: 1px solid var(--highlight);
+  box-shadow: none;
 }
 
 .pill-option input:checked + span::after {
@@ -593,13 +556,14 @@ body.dealing-active .num-btn {
   position: absolute;
   inset: -2px;
   border-radius: 12px;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--highlight) 55%, transparent);
 }
 
 .modal-actions {
   display: flex;
   gap: 10px;
   justify-content: space-between;
+  box-shadow: none;
 }
 
 .modal-actions .primary,
@@ -608,21 +572,20 @@ body.dealing-active .num-btn {
   padding: 12px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--panel-strong) 85%, rgba(255, 255, 255, 0.15) 15%);
+  background: color-mix(in srgb, var(--panel-strong) 90%, rgba(255, 255, 255, 0.15) 10%);
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-  transition: box-shadow 0.12s ease, border 0.12s ease;
+  box-shadow: none;
+  transition: border 0.12s ease, background 0.12s ease;
 }
 
 .modal-actions .primary {
-  background: linear-gradient(135deg, var(--accent), #7fb5ff);
-  color: #fff;
-  border: none;
+  background: color-mix(in srgb, var(--highlight) 18%, var(--panel-strong) 82%);
+  border: 1px solid var(--highlight);
+  color: var(--text);
 }
 
 .modal-actions .ghost:hover,
 .modal-actions .primary:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.14);
   border-color: var(--accent-soft);
 }
 
@@ -659,7 +622,7 @@ body.dealing-active .num-btn {
   justify-content: center;
   align-items: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 body.dealing-active .board-section {
@@ -668,32 +631,129 @@ body.dealing-active .board-section {
 
 .game-meta {
   position: fixed;
-  top: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 36px;
-  font-size: 13px;
-  letter-spacing: 0.3px;
-  color: var(--muted);
-  padding: 8px 14px;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--panel) 85%, rgba(255, 255, 255, 0.08) 15%);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  top: 16px;
+  left: 0;
+  right: 0;
+  transform: translateY(0);
   z-index: 6;
   opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -10px);
+  pointer-events: auto;
   transition: opacity 0.25s ease, transform 0.25s ease;
+  display: flex;
+  justify-content: center;
+}
+
+.game-meta .meta-grid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  pointer-events: auto;
+}
+
+.meta-chip {
+  --chip-radius: 21px;
+  background: color-mix(in srgb, var(--panel-strong) 90%, rgba(255, 255, 255, 0.2) 10%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--chip-radius);
+  min-width: 118px;
+  min-height: 42px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  box-shadow: none;
+  backdrop-filter: blur(12px) saturate(130%);
+  text-align: center;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  pointer-events: auto;
+}
+
+.meta-chip span {
+  display: inline-block;
+}
+
+.meta-chip.difficulty {
+  align-self: center;
+}
+
+.meta-chip.game-code {
+  min-width: 128px;
+  position: absolute;
+  top: 0;
+  right: 14px;
+}
+
+.meta-chip.time {
+  align-self: center;
+}
+
+.meta-chip.time span {
+  min-width: 56px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: 0.4px;
 }
 
 body.in-game .game-meta {
   opacity: 1;
-  transform: translate(-50%, 0);
+  transform: translateY(0);
+}
+
+body:not(.timer-ready) .meta-chip.time {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .game-meta {
+    transform: none;
+    left: 0;
+    right: 0;
+    width: auto;
+    top: 18px;
+    justify-content: center;
+  }
+
+  .game-meta .meta-grid {
+    position: static;
+    display: inline-flex;
+    flex-direction: row;
+    gap: 12px;
+    padding: 0;
+    width: auto;
+    max-width: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .meta-chip {
+    min-width: 118px;
+    min-height: 40px;
+    padding: 10px 16px;
+  }
+
+  .meta-chip.game-code {
+    min-width: 132px;
+    position: static;
+    right: auto;
+    top: auto;
+  }
+
+  .meta-chip.time {
+    position: static;
+  }
 }
 
 .right-panel {
@@ -1082,9 +1142,6 @@ body.loading-game .toggles-panel {
     flex-direction: column;
     align-items: flex-start;
   }
-  .stats {
-    margin-left: 0;
-  }
 }
 
 @media (max-width: 900px) and (orientation: portrait) {
@@ -1117,54 +1174,36 @@ body.loading-game .toggles-panel {
     top: 18px;
   }
 
-  .theme-switch {
-    position: fixed;
-    top: 16px;
-    left: 14px;
-    z-index: 10;
-  }
-
-  .theme-switch .toggle.segmented,
-  .theme-switch .toggle.segmented.small {
-    --toggle-w: 88px;
-    --toggle-h: 36px;
-  }
-
-  .stats {
-    position: fixed;
-    top: 16px;
-    right: 14px;
-    left: auto;
-    bottom: auto;
-    transform: none;
-    min-width: 0;
-    padding: 6px 12px;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-    border-radius: 14px;
-  }
-
-  .stats .stat {
-    gap: 6px;
-    font-size: 12px;
-  }
-
-  .stats .stat span {
-    font-size: 12px;
-  }
-
-  body.dealing-active .stats,
-  body:not(.timer-ready) .stats {
-    transform: none;
-  }
-
   .game-meta {
     top: 16px;
+    transform: translateY(-4px);
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+  }
+
+  .game-meta .meta-grid {
+    gap: 8px;
+    grid-template-columns: 1fr auto auto;
+  }
+
+  .meta-chip {
+    min-width: 108px;
+    min-height: 38px;
+    padding: 8px 12px;
     font-size: 12px;
-    padding: 6px 12px;
-    min-height: 36px;
-    border-radius: 14px;
+    border-radius: 18px;
+  }
+
+  .meta-chip.game-code {
+    min-width: 120px;
+  }
+
+  .theme-switch.mobile-float {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 12;
   }
 
   .sidebar,

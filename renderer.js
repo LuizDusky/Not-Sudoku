@@ -21,6 +21,8 @@ const cancelModalBtn = document.getElementById('cancelModalBtn');
 const undoBtn = document.getElementById('undoBtn');
 const redoBtn = document.getElementById('redoBtn');
 const gameMetaText = document.getElementById('gameMetaText');
+const gameDifficultyEl = document.getElementById('gameDifficulty');
+const gameCodeEl = document.getElementById('gameCode');
 const notesToggleLabel = document.querySelector('label[for="notesToggle"]');
 const themeToggleLabel = document.querySelector('label[for="themeToggle"]');
 
@@ -158,11 +160,19 @@ function setNotesMode(on, { save = true, announce = false } = {}) {
 }
 
 function updateGameMeta(meta) {
-  if (!gameMetaText || !meta) return;
+  if (!meta) return;
   const diff = meta.difficulty || difficultySelect.value || 'medium';
   const id = meta.id || '-----';
   const diffLabel = diff.charAt(0).toUpperCase() + diff.slice(1);
-  gameMetaText.textContent = `${diffLabel} #${id}`;
+  if (gameDifficultyEl) {
+    gameDifficultyEl.textContent = diffLabel;
+  }
+  if (gameCodeEl) {
+    gameCodeEl.textContent = `Game #${id}`;
+  }
+  if (gameMetaText) {
+    gameMetaText.textContent = `${diffLabel} #${id}`;
+  }
 }
 
 window.addEventListener('beforeunload', () => {
@@ -845,6 +855,7 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   let rectLeft = 0;
   let latestPointerId = null;
   let lastPreview = inputEl?.checked ?? false;
+  let suppressClick = false;
 
   const computeGeometry = () => {
     const styles = getComputedStyle(labelEl);
@@ -862,6 +873,10 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   };
 
   const endDrag = (nextChecked) => {
+    suppressClick = true;
+    setTimeout(() => {
+      suppressClick = false;
+    }, 0);
     dragging = false;
     if (latestPointerId !== null) {
       labelEl.releasePointerCapture?.(latestPointerId);
@@ -919,6 +934,12 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   labelEl.addEventListener('pointercancel', () => {
     if (!dragging) return;
     endDrag(null);
+  });
+
+  labelEl.addEventListener('click', (e) => {
+    if (suppressClick) {
+      e.preventDefault();
+    }
   });
 
   syncKnob();

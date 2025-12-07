@@ -9,7 +9,7 @@
   <body>
     <div class="layout">
       <aside class="sidebar">
-        <div class="theme-switch">
+        <div class="theme-switch mobile-float">
           <input type="checkbox" id="themeToggle" />
           <label for="themeToggle" class="toggle segmented" aria-label="Toggle theme">
             <span class="option off sun" aria-hidden="true">
@@ -48,15 +48,22 @@
           </button>
         </div>
 
-        <div class="panel stats">
-          <div class="stat single">Time <span id="timer">00:00</span></div>
-        </div>
         <input type="hidden" id="difficultySelect" value="medium" />
       </aside>
 
       <main class="main-pane">
         <div class="game-meta">
-          <span id="gameMetaText">Medium #00000</span>
+          <div class="meta-grid">
+            <div class="meta-chip difficulty" aria-label="Dificuldade">
+              <span id="gameDifficulty">Medium</span>
+            </div>
+            <div class="meta-chip game-code" aria-label="Código do jogo">
+              <span id="gameCode">Game #00000</span>
+            </div>
+            <div class="meta-chip time" aria-label="Tempo decorrido">
+              <span id="timer">00:00</span>
+            </div>
+          </div>
         </div>
         <section class="board-section">
           <div id="loadingIndicator" class="loading-indicator" role="status" aria-live="polite" aria-hidden="true">
@@ -72,7 +79,7 @@
         <div class="toggles-panel top-align">
           <div class="toggle-row">
             <input type="checkbox" id="notesToggle" />
-            <label for="notesToggle" class="toggle segmented small notes-toggle" aria-label="Toggle notes mode">
+            <label for="notesToggle" class="toggle segmented notes-toggle" aria-label="Toggle notes mode">
               <span class="option off">
                 <svg viewBox="0 0 448 512"><path d="M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128l95.1 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0L325.8 320l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7-95.1 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384 32 384c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 21.3-128L64 192c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320l95.1 0 21.3-128-95.1 0z"/></svg>
               </span>
