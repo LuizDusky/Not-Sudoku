@@ -422,8 +422,6 @@ body.notes-mode .number-pad .num-btn {
   grid-template-rows: repeat(3, 1fr);
   font-size: 0 !important;
   color: transparent !important;
-  width: clamp(50px, 5.6vw, 62px);
-  height: clamp(50px, 5.6vw, 62px);
   background-image:
     linear-gradient(to right,
       transparent 32%,
@@ -487,7 +485,7 @@ body.notes-mode .number-pad .num-btn.active {
 }
 
 .toggles-panel.top-align {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .toggle-row {
@@ -765,7 +763,7 @@ body:not(.timer-ready) .meta-chip.time {
   padding: 24px 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--gap1);
   background: transparent;
   border-left: none;
   align-items: center;
@@ -1176,6 +1174,7 @@ body:not(.dark) .cell.box-related {
   :root {
     --top-pill-height: 30px;
     --top-pill-min-width: 90px;
+    --bottom-stack-space: calc(var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
   }
 
   .layout {
@@ -1245,8 +1244,11 @@ body:not(.dark) .cell.box-related {
 @media (max-width: 900px) {
   :root {
     --gap1: 6px;
+    --bottom-actions-h: 38px;
+    --key-size-mobile: clamp(48px, 11vw, 60px);
+    --mobile-keypad-h: calc(var(--key-size-mobile) * 2 + var(--gap1));
+    --bottom-stack-space: calc(var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
     --mobile-actions-h: clamp(42px, 8vw, 52px);
-    --mobile-keypad-h: clamp(54px, 10vw, 70px);
     --cell-gap: 3px;
     --block-gap-extra: 1px;
     --tile-radius: 10px;
@@ -1269,9 +1271,10 @@ body:not(.dark) .cell.box-related {
     align-items: center;
     justify-content: flex-start;
     height: auto;
+    min-height: var(--mobile-keypad-h);
     min-height: 100vh;
     max-width: none;
-    padding: var(--gap1) var(--gap1) var(--gap1);
+    padding: var(--gap1) var(--gap1) var(--bottom-stack-space);
     row-gap: 0;
     column-gap: 0;
   }
@@ -1344,6 +1347,7 @@ body:not(.dark) .cell.box-related {
     display: flex;
     justify-content: center;
     align-items: center;
+    min-height: calc(100vh - var(--bottom-stack-space) - var(--top-pill-height) - var(--gap1) * 2);
   }
 
   .board-section {
@@ -1387,16 +1391,19 @@ body:not(.dark) .cell.box-related {
   }
 
   .toggles-panel {
-    position: static;
-    width: 100%;
-    max-width: 480px;
-    margin: 0 auto 0;
-    padding: 0 var(--gap1);
+    position: fixed;
+    left: var(--gap1);
+    right: var(--gap1);
+    bottom: calc(var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1));
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     background: none;
-    z-index: 9;
+    z-index: 11;
     order: 3;
   }
 
@@ -1405,20 +1412,24 @@ body:not(.dark) .cell.box-related {
   }
 
   .numbers-panel {
-    position: static;
-    width: 100%;
-    max-width: 520px;
-    margin: var(--gap1) auto var(--gap1);
-    z-index: 6;
-    height: auto;
+    position: fixed;
+    left: var(--gap1);
+    right: var(--gap1);
+    bottom: calc(var(--bottom-actions-h) + var(--gap1));
+    width: auto;
+    max-width: none;
+    margin: 0;
+    z-index: 10;
+    height: var(--mobile-keypad-h);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     order: 4;
+    margin-top: 0;
   }
 
   .number-pad {
-    --key-size: clamp(48px, 11vw, 60px);
+    --key-size: var(--key-size-mobile);
     --key-gap: var(--gap1);
     width: 100%;
     max-width: 520px;
@@ -1444,8 +1455,6 @@ body:not(.dark) .cell.box-related {
   }
 
   body.notes-mode .number-pad .num-btn {
-    width: var(--key-size);
-    height: var(--key-size);
     display: grid !important;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
@@ -1477,17 +1486,20 @@ body:not(.dark) .cell.box-related {
   }
 
   .actions {
-    position: static;
+    position: fixed;
     display: flex;
     flex-wrap: nowrap;
     justify-content: center;
     gap: var(--gap1);
-    width: 100%;
-    max-width: 760px;
-    z-index: 6;
-    height: auto;
+    width: auto;
+    left: var(--gap1);
+    right: var(--gap1);
+    max-width: none;
+    z-index: 12;
+    height: var(--bottom-actions-h);
     align-items: center;
-    margin: var(--gap1) auto var(--gap1);
+    margin: 0;
+    bottom: 0;
     order: 5;
   }
 
@@ -1522,7 +1534,7 @@ body:not(.dark) .cell.box-related {
   .layout {
     height: auto;
     min-height: 100vh;
-    padding: 0 var(--gap1) var(--gap1);
+    padding: 0 var(--gap1) var(--bottom-stack-space);
     row-gap: 0;
   }
 
