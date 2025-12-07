@@ -49,6 +49,7 @@ const undoStack = [];
 const redoStack = [];
 let conflictCache = new Set();
 let lastHint = null;
+let wakeLock = null;
 
 function readLocalPrefs() {
   try {
@@ -174,6 +175,27 @@ function updateGameMeta(meta) {
 window.addEventListener('beforeunload', () => {
   saveState();
 });
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => {
+      wakeLock = null;
+    });
+  } catch (err) {
+    console.warn('Wake Lock request failed', err);
+  }
+}
+
+function setupWakeLock() {
+  requestWakeLock();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !wakeLock) {
+      requestWakeLock();
+    }
+  });
+}
 
 function snapshotBoard() {
   return {
@@ -408,6 +430,7 @@ function updateTotalTimeDisplay() {
 function init() {
   cells = createGrid(gridEl, handleCellClick);
   attachEvents();
+  setupWakeLock();
   loadPreferences().then((restored) => {
     if (!restored) {
       openNewGameModal();
