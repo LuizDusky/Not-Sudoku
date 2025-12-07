@@ -852,7 +852,8 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   let rectLeft = 0;
   let latestPointerId = null;
   let lastPreview = inputEl?.checked ?? false;
-  let suppressClick = false;
+  let startX = 0;
+  let moved = false;
 
   const computeGeometry = () => {
     const styles = getComputedStyle(labelEl);
@@ -870,10 +871,6 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   };
 
   const endDrag = (nextChecked) => {
-    suppressClick = true;
-    setTimeout(() => {
-      suppressClick = false;
-    }, 0);
     dragging = false;
     if (latestPointerId !== null) {
       labelEl.releasePointerCapture?.(latestPointerId);
@@ -897,6 +894,8 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
     if (e.button !== 0) return;
     computeGeometry();
     dragging = true;
+    moved = false;
+    startX = e.clientX;
     lastPreview = inputEl.checked;
     latestPointerId = e.pointerId;
     labelEl.setPointerCapture?.(e.pointerId);
@@ -906,6 +905,7 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
 
   labelEl.addEventListener('pointermove', (e) => {
     if (!dragging) return;
+    if (Math.abs(e.clientX - startX) > 2) moved = true;
     const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
     labelEl.style.setProperty('--knob-shift', `${shift}px`);
     const previewOn = shift >= maxShift / 2;
@@ -922,7 +922,7 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   labelEl.addEventListener('pointerup', (e) => {
     if (!dragging) return;
     const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
-    const shouldCheck = shift >= maxShift / 2;
+    const shouldCheck = moved ? shift >= maxShift / 2 : !inputEl.checked;
     labelEl.style.setProperty('--knob-shift', `${shouldCheck ? maxShift : 0}px`);
     endDrag(shouldCheck);
     e.preventDefault();
@@ -931,19 +931,6 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   labelEl.addEventListener('pointercancel', () => {
     if (!dragging) return;
     endDrag(null);
-  });
-
-  labelEl.addEventListener('click', (e) => {
-    if (suppressClick) {
-      e.preventDefault();
-      return;
-    }
-    if (dragging) return;
-    // Allow tap anywhere on the pill to toggle when not dragging
-    e.preventDefault();
-    computeGeometry();
-    const nextChecked = !inputEl.checked;
-    endDrag(nextChecked);
   });
 
   const wrapper = labelEl.parentElement;
