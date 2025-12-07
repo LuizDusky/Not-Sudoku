@@ -1174,7 +1174,7 @@ body:not(.dark) .cell.box-related {
   :root {
     --top-pill-height: 30px;
     --top-pill-min-width: 90px;
-    --bottom-stack-space: calc(var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
+    --bottom-stack-space: calc(var(--gap1) + var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
   }
 
   .layout {
@@ -1247,7 +1247,7 @@ body:not(.dark) .cell.box-related {
     --bottom-actions-h: 38px;
     --key-size-mobile: clamp(48px, 11vw, 60px);
     --mobile-keypad-h: calc(var(--key-size-mobile) * 2 + var(--gap1));
-    --bottom-stack-space: calc(var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
+    --bottom-stack-space: calc(var(--gap1) + var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
     --mobile-actions-h: clamp(42px, 8vw, 52px);
     --cell-gap: 3px;
     --block-gap-extra: 1px;
@@ -1394,7 +1394,7 @@ body:not(.dark) .cell.box-related {
     position: fixed;
     left: var(--gap1);
     right: var(--gap1);
-    bottom: calc(var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1));
+    bottom: calc(var(--gap1) + var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1));
     width: auto;
     max-width: none;
     margin: 0;
@@ -1415,7 +1415,7 @@ body:not(.dark) .cell.box-related {
     position: fixed;
     left: var(--gap1);
     right: var(--gap1);
-    bottom: calc(var(--bottom-actions-h) + var(--gap1));
+    bottom: calc(var(--gap1) + var(--bottom-actions-h) + var(--gap1));
     width: auto;
     max-width: none;
     margin: 0;
@@ -1499,7 +1499,7 @@ body:not(.dark) .cell.box-related {
     height: var(--bottom-actions-h);
     align-items: center;
     margin: 0;
-    bottom: 0;
+    bottom: var(--gap1);
     order: 5;
   }
 
@@ -1606,7 +1606,7 @@ body:not(.dark) .cell.box-related {
     --bottom-actions-h: 32px;
     --key-size-mobile: clamp(42px, 10vw, 50px);
     --mobile-keypad-h: calc(var(--key-size-mobile) * 2 + var(--gap1));
-    --bottom-stack-space: calc(var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
+    --bottom-stack-space: calc(var(--gap1) + var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1) + var(--top-pill-height));
   }
 
   .layout {
