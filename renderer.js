@@ -939,7 +939,14 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   labelEl.addEventListener('click', (e) => {
     if (suppressClick) {
       e.preventDefault();
+      return;
     }
+    if (dragging) return;
+    // Allow tap anywhere on the pill to toggle when not dragging
+    e.preventDefault();
+    computeGeometry();
+    const nextChecked = !inputEl.checked;
+    endDrag(nextChecked);
   });
 
   syncKnob();

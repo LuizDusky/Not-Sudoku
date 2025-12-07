@@ -84,6 +84,7 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   height: 100%;
   overflow: hidden;
 }
@@ -94,11 +95,11 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: 220px auto 220px;
-  column-gap: 40px;
+  grid-template-columns: minmax(200px, 240px) 1fr minmax(200px, 240px);
+  column-gap: 36px;
   min-height: 100vh;
   height: 100vh;
-  max-width: 1140px;
+  max-width: 1200px;
   margin: 0 auto;
   align-items: center;
   justify-content: center;
@@ -1066,21 +1067,21 @@ body.loading-game .toggles-panel {
   font-size: var(--note-font-size);
   justify-items: center;
   align-items: center;
-  color: color-mix(in srgb, var(--note) 35%, transparent);
-  opacity: 0.98;
+  color: color-mix(in srgb, var(--note) 55%, var(--text) 20%);
+  opacity: 1;
 }
 
 .note {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
 }
 
 .note.active-note {
-  font-weight: 700;
-  color: color-mix(in srgb, var(--note) 70%, var(--text) 30%);
+  font-weight: 800;
+  color: color-mix(in srgb, var(--note) 80%, var(--text) 35%);
 }
 
 .deal-chip {
@@ -1150,6 +1151,8 @@ body.loading-game .toggles-panel {
     --mobile-actions-h: clamp(56px, 10vw, 68px);
     --mobile-keypad-h: clamp(54px, 10vw, 70px);
     --mobile-toggle-h: clamp(40px, 8vw, 46px);
+    --cell-gap: 3px;
+    --block-gap-extra: 1px;
   }
 
   body {
