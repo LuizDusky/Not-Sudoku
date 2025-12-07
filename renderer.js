@@ -886,14 +886,14 @@ function runDealAnimation(puzzle, onComplete) {
 
 function syncToggleKnob(inputEl, labelEl) {
   if (!inputEl || !labelEl) return;
+  if (labelEl.classList.contains('dragging')) return;
+  const reverse = labelEl.dataset.reverse === 'true' || labelEl.classList.contains('reverse');
   const styles = getComputedStyle(labelEl);
   const pad = parseFloat(styles.getPropertyValue('--pad')) || 0;
-  const knobW =
-    parseFloat(styles.getPropertyValue('--knob-w')) ||
-    labelEl.offsetHeight - pad * 2 ||
-    0;
-  const maxShift = Math.max(labelEl.offsetWidth - knobW - pad * 2, 0);
-  const shift = inputEl.checked ? maxShift : 0;
+  const trackW = labelEl.clientWidth || 0;
+  const knobW = Math.max(trackW / 2 - pad, 0);
+  const maxShift = Math.max(trackW - knobW - pad * 2, 0);
+  const shift = inputEl.checked ? (reverse ? 0 : maxShift) : (reverse ? maxShift : 0);
   labelEl.style.setProperty('--knob-shift', `${shift}px`);
 }
 
@@ -905,19 +905,21 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   let rectLeft = 0;
   let latestPointerId = null;
   let lastPreview = inputEl?.checked ?? false;
+  let startChecked = inputEl?.checked ?? false;
   let startX = 0;
   let moved = false;
+  const reverse = labelEl.dataset.reverse === 'true' || labelEl.classList.contains('reverse');
 
   const computeGeometry = () => {
     const styles = getComputedStyle(labelEl);
     pad = parseFloat(styles.getPropertyValue('--pad')) || 0;
-    knobW =
-      parseFloat(styles.getPropertyValue('--knob-w')) ||
-      labelEl.offsetHeight - pad * 2 ||
-      0;
-    maxShift = Math.max(labelEl.offsetWidth - knobW - pad * 2, 0);
+    const trackW = labelEl.clientWidth || 0;
+    knobW = Math.max(trackW / 2 - pad, 0);
+    maxShift = Math.max(trackW - knobW - pad * 2, 0);
     rectLeft = labelEl.getBoundingClientRect().left;
   };
+
+  const shiftForState = (checked) => (reverse ? (checked ? 0 : maxShift) : (checked ? maxShift : 0));
 
   const syncKnob = () => {
     syncToggleKnob(inputEl, labelEl);
@@ -930,13 +932,14 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
     }
     latestPointerId = null;
     if (nextChecked === null) {
+      inputEl.checked = startChecked;
       syncKnob();
       labelEl.classList.remove('dragging', 'dragging-on', 'dragging-off');
       return;
     }
-    const changed = inputEl.checked !== nextChecked;
+    const changed = startChecked !== nextChecked;
     inputEl.checked = nextChecked;
-    labelEl.style.setProperty('--knob-shift', `${nextChecked ? maxShift : 0}px`);
+    labelEl.style.setProperty('--knob-shift', `${shiftForState(nextChecked)}px`);
     if (changed) {
       inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     }
@@ -950,6 +953,7 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
     moved = false;
     startX = e.clientX;
     lastPreview = inputEl.checked;
+    startChecked = inputEl.checked;
     latestPointerId = e.pointerId;
     labelEl.setPointerCapture?.(e.pointerId);
     labelEl.classList.add('dragging');
@@ -961,7 +965,7 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
     if (Math.abs(e.clientX - startX) > 2) moved = true;
     const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
     labelEl.style.setProperty('--knob-shift', `${shift}px`);
-    const previewOn = shift >= maxShift / 2;
+    const previewOn = reverse ? shift <= maxShift / 2 : shift >= maxShift / 2;
     labelEl.classList.toggle('dragging-on', previewOn);
     labelEl.classList.toggle('dragging-off', !previewOn);
     if (previewOn !== lastPreview) {
@@ -975,8 +979,8 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   labelEl.addEventListener('pointerup', (e) => {
     if (!dragging) return;
     const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
-    const shouldCheck = moved ? shift >= maxShift / 2 : !inputEl.checked;
-    labelEl.style.setProperty('--knob-shift', `${shouldCheck ? maxShift : 0}px`);
+    const shouldCheck = moved ? (reverse ? shift <= maxShift / 2 : shift >= maxShift / 2) : !inputEl.checked;
+    labelEl.style.setProperty('--knob-shift', `${shiftForState(shouldCheck)}px`);
     endDrag(shouldCheck);
     e.preventDefault();
   });
