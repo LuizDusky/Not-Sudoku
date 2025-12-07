@@ -380,9 +380,18 @@ function stopTimer() {
 }
 
 function updateTimer() {
-  const minutes = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
-  const seconds = String(secondsElapsed % 60).padStart(2, '0');
-  timerEl.textContent = `${minutes}:${seconds}`;
+  const hours = Math.floor(secondsElapsed / 3600);
+  const minutes = Math.floor((secondsElapsed % 3600) / 60);
+  const seconds = secondsElapsed % 60;
+  if (hours > 0) {
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(seconds).padStart(2, '0');
+    timerEl.textContent = `${hours}:${mm}:${ss}`;
+  } else {
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(seconds).padStart(2, '0');
+    timerEl.textContent = `${mm}:${ss}`;
+  }
 }
 
 function updateTotalTimeDisplay() {
