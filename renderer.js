@@ -149,7 +149,7 @@ function applyTheme(theme) {
 function setNotesMode(on, { save = true, announce = false } = {}) {
   const currentActive = activeNumber;
   notesMode = on;
-  notesToggle.checked = on;
+  notesToggle.checked = !on;
   syncToggleKnob(notesToggle, notesToggleLabel);
   document.body.classList.toggle('notes-mode', on);
   if (announce) showStatus(on ? 'Notes mode on' : 'Notes mode off');
@@ -477,7 +477,7 @@ function attachEvents() {
     openNewGameModal();
   });
   notesToggle.addEventListener('change', () => {
-    setNotesMode(notesToggle.checked, { announce: true });
+    setNotesMode(!notesToggle.checked, { announce: true });
   });
   themeToggle.addEventListener('change', () => {
     applyTheme(themeToggle.checked ? 'dark' : 'light');
@@ -485,7 +485,7 @@ function attachEvents() {
   });
   if (notesToggle && notesToggleLabel) {
     setupDraggableToggle(notesToggle, notesToggleLabel, (checked) =>
-      setNotesMode(checked, { announce: true })
+      setNotesMode(!checked, { announce: true })
     );
   }
   if (themeToggle && themeToggleLabel) {
