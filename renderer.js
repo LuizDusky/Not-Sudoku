@@ -561,6 +561,7 @@ function setActiveNumber(val, skipSave = false, clearSelection = false) {
   numberButtons.forEach((btn) => {
     btn.classList.toggle('active', parseInt(btn.dataset.val, 10) === val);
   });
+  document.body.classList.toggle('has-active-number', !!val);
   if (val) showStatus(`Number ${val} selected`);
   if (!skipSave) saveState();
   refreshGrid();
@@ -948,6 +949,15 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
     const nextChecked = !inputEl.checked;
     endDrag(nextChecked);
   });
+
+  const wrapper = labelEl.parentElement;
+  if (wrapper && wrapper !== labelEl) {
+    wrapper.addEventListener('click', (e) => {
+      if (labelEl.contains(e.target)) return;
+      e.preventDefault();
+      endDrag(!inputEl.checked);
+    });
+  }
 
   syncKnob();
 }
