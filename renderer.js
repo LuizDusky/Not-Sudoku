@@ -494,6 +494,14 @@ function attachEvents() {
       persistPreferences();
     });
   }
+  let resizeRaf = null;
+  window.addEventListener('resize', () => {
+    if (resizeRaf) cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(() => {
+      syncToggleKnob(notesToggle, notesToggleLabel);
+      syncToggleKnob(themeToggle, themeToggleLabel);
+    });
+  });
   difficultySelect.addEventListener('change', persistPreferences);
   hintBtn.addEventListener('click', showHint);
 }
@@ -884,25 +892,32 @@ function runDealAnimation(puzzle, onComplete) {
   });
 }
 
+function measureToggleGeometry(labelEl) {
+  if (!labelEl) {
+    return { pad: 0, knobW: 0, maxShift: 0, rectLeft: 0 };
+  }
+  const styles = getComputedStyle(labelEl);
+  const pad = parseFloat(styles.getPropertyValue('--pad')) || 0;
+  const fallbackW = parseFloat(styles.getPropertyValue('--toggle-w')) || 0;
+  const rect = labelEl.getBoundingClientRect();
+  const trackW = labelEl.clientWidth || rect.width || fallbackW || 0;
+  const knobW = Math.max(trackW / 2 - pad, 0);
+  const maxShift = Math.max(trackW - knobW - pad * 2, 0);
+  return { pad, knobW, maxShift, rectLeft: rect.left };
+}
+
 function syncToggleKnob(inputEl, labelEl) {
   if (!inputEl || !labelEl) return;
   if (labelEl.classList.contains('dragging')) return;
   const reverse = labelEl.dataset.reverse === 'true' || labelEl.classList.contains('reverse');
-  const styles = getComputedStyle(labelEl);
-  const pad = parseFloat(styles.getPropertyValue('--pad')) || 0;
-  const trackW = labelEl.clientWidth || 0;
-  const knobW = Math.max(trackW / 2 - pad, 0);
-  const maxShift = Math.max(trackW - knobW - pad * 2, 0);
+  const { maxShift } = measureToggleGeometry(labelEl);
   const shift = inputEl.checked ? (reverse ? 0 : maxShift) : (reverse ? maxShift : 0);
   labelEl.style.setProperty('--knob-shift', `${shift}px`);
 }
 
 function setupDraggableToggle(inputEl, labelEl, onChange) {
   let dragging = false;
-  let pad = 0;
-  let knobW = 0;
-  let maxShift = 0;
-  let rectLeft = 0;
+  let geometry = measureToggleGeometry(labelEl);
   let latestPointerId = null;
   let lastPreview = inputEl?.checked ?? false;
   let startChecked = inputEl?.checked ?? false;
@@ -911,21 +926,18 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   const reverse = labelEl.dataset.reverse === 'true' || labelEl.classList.contains('reverse');
 
   const computeGeometry = () => {
-    const styles = getComputedStyle(labelEl);
-    pad = parseFloat(styles.getPropertyValue('--pad')) || 0;
-    const trackW = labelEl.clientWidth || 0;
-    knobW = Math.max(trackW / 2 - pad, 0);
-    maxShift = Math.max(trackW - knobW - pad * 2, 0);
-    rectLeft = labelEl.getBoundingClientRect().left;
+    geometry = measureToggleGeometry(labelEl);
   };
 
-  const shiftForState = (checked) => (reverse ? (checked ? 0 : maxShift) : (checked ? maxShift : 0));
+  const shiftForState = (checked) =>
+    reverse ? (checked ? 0 : geometry.maxShift) : (checked ? geometry.maxShift : 0);
 
   const syncKnob = () => {
     syncToggleKnob(inputEl, labelEl);
   };
 
   const endDrag = (nextChecked) => {
+    computeGeometry();
     dragging = false;
     if (latestPointerId !== null) {
       labelEl.releasePointerCapture?.(latestPointerId);
@@ -937,7 +949,7 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
       labelEl.classList.remove('dragging', 'dragging-on', 'dragging-off');
       return;
     }
-    const changed = startChecked !== nextChecked;
+    const changed = inputEl.checked !== nextChecked;
     inputEl.checked = nextChecked;
     labelEl.style.setProperty('--knob-shift', `${shiftForState(nextChecked)}px`);
     if (changed) {
@@ -963,9 +975,12 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   labelEl.addEventListener('pointermove', (e) => {
     if (!dragging) return;
     if (Math.abs(e.clientX - startX) > 2) moved = true;
-    const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
+    const shift = Math.max(
+      0,
+      Math.min(geometry.maxShift, e.clientX - geometry.rectLeft - geometry.pad - geometry.knobW / 2)
+    );
     labelEl.style.setProperty('--knob-shift', `${shift}px`);
-    const previewOn = reverse ? shift <= maxShift / 2 : shift >= maxShift / 2;
+    const previewOn = reverse ? shift <= geometry.maxShift / 2 : shift >= geometry.maxShift / 2;
     labelEl.classList.toggle('dragging-on', previewOn);
     labelEl.classList.toggle('dragging-off', !previewOn);
     if (previewOn !== lastPreview) {
@@ -978,8 +993,16 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
 
   labelEl.addEventListener('pointerup', (e) => {
     if (!dragging) return;
-    const shift = Math.max(0, Math.min(maxShift, e.clientX - rectLeft - pad - knobW / 2));
-    const shouldCheck = moved ? (reverse ? shift <= maxShift / 2 : shift >= maxShift / 2) : !inputEl.checked;
+    computeGeometry();
+    const shift = Math.max(
+      0,
+      Math.min(geometry.maxShift, e.clientX - geometry.rectLeft - geometry.pad - geometry.knobW / 2)
+    );
+    const shouldCheck = moved
+      ? reverse
+        ? shift <= geometry.maxShift / 2
+        : shift >= geometry.maxShift / 2
+      : !inputEl.checked;
     labelEl.style.setProperty('--knob-shift', `${shiftForState(shouldCheck)}px`);
     endDrag(shouldCheck);
     e.preventDefault();
