@@ -937,6 +937,15 @@ body.loading-game .toggles-panel {
   border-color: color-mix(in srgb, var(--tile-border) 80%, transparent);
 }
 
+/* Light mode: increase contrast between filled and empty cells */
+body:not(.dark) .cell:not(.empty-cell) {
+  background: color-mix(in srgb, var(--tile-bg) 92%, rgba(255, 255, 255, 0.12) 8%);
+}
+
+body:not(.dark) .cell.empty-cell {
+  background: color-mix(in srgb, var(--tile-bg) 70%, rgba(0, 0, 0, 0.06) 30%);
+}
+
 .cell.completed-digit {
   background: transparent;
   border-color: transparent;
