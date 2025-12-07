@@ -50,6 +50,7 @@ const redoStack = [];
 let conflictCache = new Set();
 let lastHint = null;
 let wakeLock = null;
+let wakeLockRequested = false;
 
 function readLocalPrefs() {
   try {
@@ -141,6 +142,7 @@ async function loadPreferences() {
 function applyTheme(theme) {
   document.body.classList.toggle('dark', theme === 'dark');
   themeToggle.checked = theme === 'dark';
+  updateThemeMeta(theme);
   syncToggleKnob(themeToggle, themeToggleLabel);
 }
 
@@ -189,12 +191,27 @@ async function requestWakeLock() {
 }
 
 function setupWakeLock() {
-  requestWakeLock();
+  const trigger = () => {
+    if (wakeLockRequested) return;
+    wakeLockRequested = true;
+    requestWakeLock();
+  };
+  ['pointerdown', 'touchstart', 'keydown'].forEach((evt) =>
+    document.addEventListener(evt, trigger, { once: true, passive: true })
+  );
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && !wakeLock) {
+    if (document.visibilityState === 'visible' && !wakeLock && wakeLockRequested) {
       requestWakeLock();
     }
   });
+}
+
+function updateThemeMeta(theme) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  const light = '#eef1f7';
+  const dark = '#0a0b0c';
+  meta.setAttribute('content', theme === 'dark' ? dark : light);
 }
 
 function snapshotBoard() {
