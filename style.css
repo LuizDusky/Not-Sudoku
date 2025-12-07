@@ -688,9 +688,10 @@ body.dealing-active .board-section {
   border: 1px solid var(--border-strong);
   border-radius: var(--chip-radius);
   min-width: var(--top-pill-min-width);
+  width: var(--top-pill-min-width);
   height: var(--top-pill-height);
   min-height: var(--top-pill-height);
-  padding: 0 16px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1193,9 +1194,10 @@ body:not(.dark) .cell.box-related {
 
   .meta-chip {
     min-width: var(--top-pill-min-width);
+    width: var(--top-pill-min-width);
     height: var(--top-pill-height);
     min-height: var(--top-pill-height);
-    padding: 0 12px;
+    padding: 0 10px;
     font-size: 11px;
     border-radius: calc(var(--top-pill-height) / 2);
   }
@@ -1309,9 +1311,10 @@ body:not(.dark) .cell.box-related {
 
   .meta-chip {
     min-width: var(--top-pill-min-width);
+    width: var(--top-pill-min-width);
     height: var(--top-pill-height);
     min-height: var(--top-pill-height);
-    padding: 0 14px;
+    padding: 0 12px;
     font-size: 12px;
     border-radius: calc(var(--top-pill-height) / 2);
   }
@@ -1529,9 +1532,10 @@ body:not(.dark) .cell.box-related {
 
   .meta-chip {
     min-width: var(--top-pill-min-width);
+    width: var(--top-pill-min-width);
     height: var(--top-pill-height);
     min-height: var(--top-pill-height);
-    padding: 0 12px;
+    padding: 0 10px;
     font-size: 12px;
     border-radius: calc(var(--top-pill-height) / 2);
   }
