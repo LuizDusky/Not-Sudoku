@@ -1,0 +1,46 @@
+{
+  "name": "notsudoku",
+  "version": "1.0.4",
+  "description": "Offline Sudoku desktop app for macOS (Intel) built with Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "author": "Luiz Dusky",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.luizdusky.notsudoku",
+    "directories": {
+      "output": "release"
+    },
+    "icon": "assets/icon.png",
+    "asar": true,
+    "files": [
+      "!release{,/**}",
+      "!node_modules/.cache{,/**}"
+    ],
+    "mac": {
+      "category": "public.app-category.games",
+      "icon": "assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

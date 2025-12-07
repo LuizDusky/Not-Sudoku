@@ -1,0 +1,15 @@
+appId: com.example.sudoku
+productName: Sudoku
+asar: true
+directories:
+  output: release
+files:
+  - "!release{,/**}"
+  - "!node_modules/.cache{,/**}"
+mac:
+  category: public.app-category.games
+  target:
+    - dmg
+    - zip
+  arch:
+    - x64

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Not Sudoku</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="theme-switch">
+          <input type="checkbox" id="themeToggle" />
+          <label for="themeToggle" class="toggle segmented" aria-label="Toggle theme">
+            <span class="option off sun" aria-hidden="true">
+              <svg viewBox="0 0 512 512"><path d="M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391 371.1 498.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM160 256a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zm224 0a128 128 0 1 0 -256 0 128 128 0 1 0 256 0z"/></svg>
+            </span>
+            <span class="option on moon" aria-hidden="true">
+              <svg viewBox="0 0 384 512"><path d="M223.5 32C100 32 0 132.3 0 256S100 480 223.5 480c60.6 0 115.5-24.2 155.8-63.4c5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6c-96.9 0-175.5-78.8-175.5-176c0-65.8 36-123.1 89.3-153.3c6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z"/></svg>
+            </span>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="newGameBtn" class="icon-btn">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 512 512"><path d="M440 88H328c-13.3 0-24 10.7-24 24s10.7 24 24 24h54.1L323 195.1c-31-25.4-70.7-40.9-113-40.9C92.7 154.2 16 230.9 16 327.1c0 96.2 76.7 172.9 172.9 172.9 60.7 0 113.9-31 145-77.8 7.4-11.1 4.3-26-6.8-33.4s-26-4.3-33.4 6.8C270.1 430 230 448 188.9 448 120 448 64 392 64 323.1S120 198.2 188.9 198.2c31.5 0 61 10.6 85.2 29.9L264 238c-9.4 9.4-9.4 24.6 0 34s24.6 9.4 34 0l95.1-95.1V232c0 13.3 10.7 24 24 24s24-10.7 24-24V112c0-13.3-10.7-24-24-24z"/></svg>
+            </span>
+            <span class="label">New Game</span>
+          </button>
+          <button id="hintBtn" class="icon-btn">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 384 512"><path d="M215.1 0C102.4 0 13.1 90.3 13.1 202.9c0 77 44 144.3 109.4 176.9V416c0 17.7 14.3 32 32 32h64c17.7 0 32-14.3 32-32v-36.3c65.4-32.6 109.4-99.9 109.4-176.9C371.9 90.3 282.6 0 169.9 0h45.2zM192 480c-26.5 0-48 21.5-48 48h96c0-26.5-21.5-48-48-48z"/></svg>
+            </span>
+            <span class="label">Hint</span>
+          </button>
+          <button id="undoBtn" class="icon-btn">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 512 512"><path d="M176 72L176 24c0-10-12-15-19.3-8.5L4.7 152.5c-6.2 5.4-6.2 15.1 0 20.5l152 136c7.3 6.5 19.3 1.5 19.3-8.5l0-48 160 0c57.4 0 104 46.6 104 104s-46.6 104-104 104l-24 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l24 0c84.1 0 152-67.9 152-152s-67.9-152-152-152l-160 0 0-48z"/></svg>
+            </span>
+            <span class="label">Undo</span>
+          </button>
+          <button id="redoBtn" class="icon-btn">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 512 512"><path d="M336 72L336 24c0-10 12-15 19.3-8.5l152 136c6.2 5.4 6.2 15.1 0 20.5l-152 136c-7.3 6.5-19.3 1.5-19.3-8.5l0-48-160 0c-57.4 0-104 46.6-104 104s46.6 104 104 104l24 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-24 0c-84.1 0-152-67.9-152-152s67.9-152 152-152l160 0 0-48z"/></svg>
+            </span>
+            <span class="label">Redo</span>
+          </button>
+        </div>
+
+        <div class="panel stats">
+          <div class="stat single">Time <span id="timer">00:00</span></div>
+        </div>
+        <input type="hidden" id="difficultySelect" value="medium" />
+      </aside>
+
+      <main class="main-pane">
+        <div class="game-meta">
+          <span id="gameMetaText">Medium #00000</span>
+        </div>
+        <section class="board-section">
+          <div id="loadingIndicator" class="loading-indicator" role="status" aria-live="polite" aria-hidden="true">
+            <div class="spinner" aria-hidden="true"></div>
+            <span class="message">Carregando novo jogo...</span>
+          </div>
+          <div id="grid" class="grid"></div>
+          <div class="status" id="status"></div>
+        </section>
+      </main>
+
+      <aside class="right-panel">
+        <div class="toggles-panel top-align">
+          <div class="toggle-row">
+            <input type="checkbox" id="notesToggle" />
+            <label for="notesToggle" class="toggle segmented small notes-toggle" aria-label="Toggle notes mode">
+              <span class="option off">
+                <svg viewBox="0 0 448 512"><path d="M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128l95.1 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0L325.8 320l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7-95.1 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384 32 384c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 21.3-128L64 192c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320l95.1 0 21.3-128-95.1 0z"/></svg>
+              </span>
+              <span class="option on">
+                <svg viewBox="0 0 512 512"><path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/></svg>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div class="numbers-panel">
+          <div class="number-pad" id="numberPad">
+            <button class="num-btn" data-val="1">1</button>
+            <button class="num-btn" data-val="2">2</button>
+            <button class="num-btn" data-val="3">3</button>
+            <button class="num-btn" data-val="4">4</button>
+            <button class="num-btn" data-val="5">5</button>
+            <button class="num-btn" data-val="6">6</button>
+            <button class="num-btn" data-val="7">7</button>
+            <button class="num-btn" data-val="8">8</button>
+            <button class="num-btn" data-val="9">9</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="modal-backdrop" id="newGameModal">
+      <div class="modal glass">
+        <div class="modal-header">Choose difficulty</div>
+        <div class="difficulty-options">
+          <label class="pill-option">
+            <input type="radio" name="difficulty" value="easy" />
+            <span>Easy</span>
+          </label>
+          <label class="pill-option">
+            <input type="radio" name="difficulty" value="medium" checked />
+            <span>Medium</span>
+          </label>
+          <label class="pill-option">
+            <input type="radio" name="difficulty" value="hard" />
+            <span>Hard</span>
+          </label>
+          <label class="pill-option">
+            <input type="radio" name="difficulty" value="expert" />
+            <span>Expert</span>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button id="restartBtn" class="ghost">Restart current</button>
+          <button id="startNewBtn" class="primary">Start new</button>
+          <button id="cancelModalBtn" class="ghost">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="completeModal">
+      <div class="modal glass">
+        <div class="modal-header">Puzzle complete</div>
+        <div class="stats-grid">
+          <div class="stat-item"><span>Time</span><strong id="finishTime">00:00</strong></div>
+          <div class="stat-item"><span>Errors</span><strong id="finishErrors">0</strong></div>
+          <div class="stat-item"><span>Moves</span><strong id="finishMoves">0</strong></div>
+        </div>
+        <div class="modal-actions">
+          <button id="closeCompleteBtn" class="ghost">Close</button>
+          <button id="newFromCompleteBtn" class="primary">New game</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./renderer.js"></script>
+  </body>
+</html>
