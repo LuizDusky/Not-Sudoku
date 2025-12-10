@@ -6,10 +6,10 @@ const gridEl = document.getElementById('grid');
 const difficultySelect = document.getElementById('difficultySelect');
 const difficultyRadios = Array.from(document.querySelectorAll('input[name=\"difficulty\"]'));
 const newGameBtn = document.getElementById('newGameBtn');
+const clearBtn = document.getElementById('clearBtn');
 const numberButtons = Array.from(document.querySelectorAll('.num-btn'));
 const notesToggle = document.getElementById('notesToggle');
 const themeToggle = document.getElementById('themeToggle');
-const hintBtn = document.getElementById('hintBtn');
 const timerEl = document.getElementById('timer');
 const solvedCountEl = document.getElementById('solvedCount');
 const totalTimeEl = document.getElementById('totalTime');
@@ -51,6 +51,7 @@ let conflictCache = new Set();
 let lastHint = null;
 let wakeLock = null;
 let wakeLockRequested = false;
+let pendingNumberClear = false;
 
 function readLocalPrefs() {
   try {
@@ -468,6 +469,12 @@ function attachEvents() {
   startNewBtn.addEventListener('click', startNewFromModal);
   restartBtn.addEventListener('click', restartPuzzle);
   cancelModalBtn.addEventListener('click', closeNewGameModal);
+  clearBtn.addEventListener('click', clearBoardChanges);
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeNewGameModal();
+    }
+  });
   numberButtons.forEach((btn) => btn.addEventListener('click', () => selectNumber(btn)));
   undoBtn.addEventListener('click', undoMove);
   redoBtn.addEventListener('click', redoMove);
@@ -475,6 +482,12 @@ function attachEvents() {
   document.getElementById('newFromCompleteBtn')?.addEventListener('click', () => {
     closeCompletionModal();
     openNewGameModal();
+  });
+  const completeModal = document.getElementById('completeModal');
+  completeModal?.addEventListener('click', (e) => {
+    if (e.target === completeModal) {
+      closeCompletionModal();
+    }
   });
   notesToggle.addEventListener('change', () => {
     setNotesMode(!notesToggle.checked, { announce: true });
@@ -503,7 +516,6 @@ function attachEvents() {
     });
   });
   difficultySelect.addEventListener('change', persistPreferences);
-  hintBtn.addEventListener('click', showHint);
 }
 
 async function newGame() {
@@ -548,9 +560,18 @@ async function newGame() {
 
 function handleCellClick(row, col) {
   if (dealing) return;
+  pendingNumberClear = false;
   selected = { row, col };
   highlightSelection(cells, selected, board, activeNumber);
   lastHint = null;
+  const val = board?.getValue(row, col) || 0;
+  const shouldSyncActive = activeNumber !== null && val !== 0 && val !== activeNumber;
+  if (shouldSyncActive) {
+    setActiveNumber(val, false, false);
+    highlightSelection(cells, selected, board, activeNumber);
+    // When syncing to a filled cell, skip edits; user can click again to change.
+    if (val !== 0) return;
+  }
   if (!board || board.isGiven(row, col)) return;
   if (notesMode) {
     if (!activeNumber) return;
@@ -588,13 +609,24 @@ function handleClickAway(e) {
   ) {
     return;
   }
-  selected = null;
-  setActiveNumber(null, true, true);
-  highlightSelection(cells, selected, board, activeNumber);
+  if (selected) {
+    selected = null;
+    pendingNumberClear = activeNumber !== null;
+    highlightSelection(cells, selected, board, activeNumber);
+    return;
+  }
+  if (activeNumber !== null) {
+    setActiveNumber(null, true, true);
+    pendingNumberClear = false;
+    highlightSelection(cells, selected, board, activeNumber);
+    return;
+  }
+  pendingNumberClear = false;
 }
 
 function selectNumber(button) {
   if (dealing) return;
+  pendingNumberClear = false;
   const val = parseInt(button.dataset.val, 10);
   if (completedDigits.has(val)) {
     setActiveNumber(null, false, true);
@@ -608,6 +640,7 @@ function selectNumber(button) {
 }
 
 function setActiveNumber(val, skipSave = false, clearSelection = false) {
+  pendingNumberClear = false;
   if (val && completedDigits.has(val)) {
     val = null;
   }
@@ -657,6 +690,7 @@ function redoMove() {
 function handleKeyDown(e) {
   if (dealing) return;
   if (!board) return;
+  pendingNumberClear = false;
   if (!selected) selected = { row: 0, col: 0 };
   const key = e.key;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
@@ -791,28 +825,20 @@ function restartPuzzle() {
   showStatus('Puzzle restarted');
 }
 
-function showHint() {
+function clearBoardChanges() {
   if (!board) return;
-  if (lastHint) {
-    lastHint = null;
-    refreshGrid();
-    showStatus('Hint cleared');
-    return;
-  }
-  const conflicts = board.computeConflicts();
-  const hint = board.findHint();
-  if (hint) {
-    lastHint = hint;
-    refreshGrid(conflicts, hint);
-    selected = { row: hint.row, col: hint.col };
-    highlightSelection(cells, selected, board, activeNumber);
-    showStatus(`Try ${hint.value} at row ${hint.row + 1}, col ${hint.col + 1}`);
-    saveState();
-  } else {
-    lastHint = null;
-    refreshGrid(conflicts, null);
-    showStatus('No hints available');
-  }
+  lastHint = null;
+  board.resetToPuzzle();
+  selected = null;
+  completedDigits = new Set();
+  gameStats = { errors: 0, moves: 0 };
+  undoStack.length = 0;
+  redoStack.length = 0;
+  conflictCache = new Set();
+  setActiveNumber(null, true, true);
+  refreshGrid();
+  saveState();
+  showStatus('Board cleared');
 }
 
 function checkComplete() {
@@ -852,9 +878,27 @@ function runDealAnimation(puzzle, onComplete) {
     saveState();
     return;
   }
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouchPrimary = navigator.maxTouchPoints > 0;
+  const compactViewport = window.matchMedia('(max-width: 900px)').matches;
+  const fastDeal = prefersReducedMotion || (isTouchPrimary && compactViewport);
   dealing = true;
   const numbersByVal = Object.fromEntries(numberButtons.map((btn) => [parseInt(btn.dataset.val, 10), btn]));
-  const duration = 280;
+  const duration = 200;
+
+  if (fastDeal) {
+    refreshGrid();
+    requestAnimationFrame(() => {
+      cells.flat().forEach((cell) => cell.classList.add('revealed'));
+      dealing = false;
+      gridEl.classList.remove('dealing');
+      saveState();
+      if (onComplete) onComplete();
+    });
+    return;
+  }
+
+  refreshGrid();
 
   givens.forEach((item, idx) => {
     setTimeout(() => {
@@ -868,9 +912,8 @@ function runDealAnimation(puzzle, onComplete) {
       chip.textContent = val;
       chip.style.left = `${sRect.left + sRect.width / 2 - 18}px`;
       chip.style.top = `${sRect.top + sRect.height / 2 - 18}px`;
-      chip.style.transition = `left 0.28s ease, top 0.28s ease, opacity 0.28s ease`;
+      chip.style.transition = `left 0.22s ease, top 0.22s ease, opacity 0.22s ease`;
       document.body.appendChild(chip);
-      refreshGrid();
       requestAnimationFrame(() => {
         chip.style.opacity = '1';
         chip.style.left = `${tRect.left + tRect.width / 2 - 18}px`;
@@ -879,8 +922,8 @@ function runDealAnimation(puzzle, onComplete) {
       setTimeout(() => {
         chip.remove();
         targetCell.classList.add('revealed');
-        refreshGrid();
         if (idx === givens.length - 1) {
+          refreshGrid();
           dealing = false;
           gridEl.classList.remove('dealing');
           cells.flat().forEach((cell) => cell.classList.add('revealed'));
@@ -888,7 +931,7 @@ function runDealAnimation(puzzle, onComplete) {
           if (onComplete) onComplete();
         }
       }, duration);
-    }, idx * 70);
+    }, idx * 55);
   });
 }
 
@@ -916,13 +959,14 @@ function syncToggleKnob(inputEl, labelEl) {
 }
 
 function setupDraggableToggle(inputEl, labelEl, onChange) {
-  let dragging = false;
+  const DRAG_SLOP = 8;
+  let pointerActive = false;
+  let dragStarted = false;
   let geometry = measureToggleGeometry(labelEl);
   let latestPointerId = null;
   let lastPreview = inputEl?.checked ?? false;
   let startChecked = inputEl?.checked ?? false;
   let startX = 0;
-  let moved = false;
   const reverse = labelEl.dataset.reverse === 'true' || labelEl.classList.contains('reverse');
 
   const computeGeometry = () => {
@@ -938,7 +982,8 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
 
   const endDrag = (nextChecked) => {
     computeGeometry();
-    dragging = false;
+    pointerActive = false;
+    dragStarted = false;
     if (latestPointerId !== null) {
       labelEl.releasePointerCapture?.(latestPointerId);
     }
@@ -961,20 +1006,25 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   labelEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     computeGeometry();
-    dragging = true;
-    moved = false;
+    pointerActive = true;
+    dragStarted = false;
     startX = e.clientX;
     lastPreview = inputEl.checked;
     startChecked = inputEl.checked;
     latestPointerId = e.pointerId;
     labelEl.setPointerCapture?.(e.pointerId);
-    labelEl.classList.add('dragging');
+    labelEl.classList.remove('dragging-on', 'dragging-off');
     e.preventDefault();
   });
 
   labelEl.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    if (Math.abs(e.clientX - startX) > 2) moved = true;
+    if (!pointerActive) return;
+    const delta = Math.abs(e.clientX - startX);
+    if (!dragStarted && delta < DRAG_SLOP) return;
+    if (!dragStarted) {
+      dragStarted = true;
+      labelEl.classList.add('dragging');
+    }
     const shift = Math.max(
       0,
       Math.min(geometry.maxShift, e.clientX - geometry.rectLeft - geometry.pad - geometry.knobW / 2)
@@ -992,24 +1042,25 @@ function setupDraggableToggle(inputEl, labelEl, onChange) {
   });
 
   labelEl.addEventListener('pointerup', (e) => {
-    if (!dragging) return;
+    if (!pointerActive) return;
     computeGeometry();
-    const shift = Math.max(
-      0,
-      Math.min(geometry.maxShift, e.clientX - geometry.rectLeft - geometry.pad - geometry.knobW / 2)
-    );
-    const shouldCheck = moved
-      ? reverse
-        ? shift <= geometry.maxShift / 2
-        : shift >= geometry.maxShift / 2
-      : !inputEl.checked;
-    labelEl.style.setProperty('--knob-shift', `${shiftForState(shouldCheck)}px`);
+    let shouldCheck;
+    if (!dragStarted) {
+      shouldCheck = !inputEl.checked;
+    } else {
+      const shift = Math.max(
+        0,
+        Math.min(geometry.maxShift, e.clientX - geometry.rectLeft - geometry.pad - geometry.knobW / 2)
+      );
+      shouldCheck = reverse ? shift <= geometry.maxShift / 2 : shift >= geometry.maxShift / 2;
+      labelEl.style.setProperty('--knob-shift', `${shiftForState(shouldCheck)}px`);
+    }
     endDrag(shouldCheck);
     e.preventDefault();
   });
 
   labelEl.addEventListener('pointercancel', () => {
-    if (!dragging) return;
+    if (!pointerActive) return;
     endDrag(null);
   });
 
