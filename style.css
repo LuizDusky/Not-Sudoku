@@ -9,7 +9,7 @@
   --muted: #6b7280;
   --accent: #7a7a7a;
   --accent-soft: rgba(122, 122, 122, 0.22);
-  --highlight: #12b6a1;
+  --highlight: #1288b6;
   --given: #0f172a;
   --input: #111827;
   --conflict: #ff5c5c;
@@ -44,7 +44,7 @@ body.dark {
   --muted: #a0a4aa;
   --accent: #b1b1b1;
   --accent-soft: rgba(177, 177, 177, 0.26);
-  --highlight: #22c2ae;
+  --highlight: #1288b6;
   --given: #f2f2f2;
   --input: #ffffff;
   --conflict: #ff7b7b;
@@ -992,7 +992,7 @@ body:not(.dark) .cell.empty-cell {
 }
 
 body.dark .cell.empty-cell {
-  background: color-mix(in srgb, var(--tile-bg) 84%, rgba(0, 0, 0, 0.12) 16%);
+  background: color-mix(in srgb, var(--tile-bg) 65%, rgba(0, 0, 0, 0.12) 16%);
 }
 
 body.dark .cell.filled-cell {
@@ -1165,9 +1165,9 @@ body.dark .cell.box-related {
 }
 
 .note.active-note {
-  font-weight: 700;
-  color: color-mix(in srgb, var(--highlight) 55%, var(--note) 35%);
-  opacity: 0.95;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--input) 100%, var(--note) 20%);
+  opacity: 1;
 }
 
 
