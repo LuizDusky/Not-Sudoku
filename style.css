@@ -424,9 +424,9 @@ body.dealing-active .num-btn {
 }
 
 body.notes-mode .number-pad .num-btn {
-  --note-grid-inset: 12%;
+  --note-grid-inset: 4%;
   --note-grid-line: color-mix(in srgb, var(--border-strong) 75%, transparent 25%);
-  --note-line-w: 3px;
+  --note-line-w: 4px;
   display: grid !important;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
@@ -434,6 +434,7 @@ body.notes-mode .number-pad .num-btn {
   font-size: 0 !important;
   color: transparent !important;
   background-image: none;
+  
 }
 
 body.notes-mode .number-pad .num-btn::after {
@@ -447,7 +448,11 @@ body.notes-mode .number-pad .num-btn::after {
   grid-column: var(--note-col, 2);
   color: color-mix(in srgb, var(--note) 85%, var(--text) 15%);
   display: block;
+  
   z-index: 2;
+}
+body.notes-mode .num-btn.active{
+  border-color: var(--highlight);
 }
 
 body.notes-mode .number-pad .num-btn::before {
@@ -915,7 +920,7 @@ body:not(.timer-ready) .meta-chip.time {
   background: color-mix(in srgb, var(--panel) 75%, rgba(0, 0, 0, 0.4) 25%);
   backdrop-filter: blur(6px) saturate(140%);
   border-radius: 0;
-  z-index: 50;
+  z-index: 500;
 }
 
 .loading-indicator .spinner {
@@ -958,13 +963,13 @@ body.loading-game .toggles-panel {
 .cell {
   --note-inset: clamp(2px, 0.8vw, 6px);
   --note-gap: clamp(1px, 0.35vw, 2px);
-  --note-font-size: clamp(7px, 1.9vw, 13px);
+  --note-font-size: clamp(9px, 2.2vw, 14px);
   position: relative;
   background: color-mix(in srgb, var(--tile-bg) 88%, rgba(0, 0, 0, 0.04) 12%);
   min-width: 0;
   min-height: 0;
   aspect-ratio: 1 / 1;
-  font-size: 22px;
+  font-size: clamp(24px, 3vw, 30px);
   color: var(--input);
   cursor: pointer;
   transition: background 0.15s ease;
@@ -1041,7 +1046,6 @@ body.dark .cell.filled-cell {
 .cell.selected {
   background: color-mix(in srgb, var(--highlight) 32%, var(--panel-strong) 68%);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--highlight) 82%, transparent), 0 12px 22px rgba(0, 0, 0, 0.14);
-  animation: cellSelectFade 150ms ease;
 }
 
 body:not(.dark) .cell.selected {
@@ -1160,13 +1164,13 @@ body.dark .cell.box-related {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
 }
 
 .note.active-note {
-  font-weight: 800;
-  color: color-mix(in srgb, var(--input) 100%, var(--note) 20%);
+  font-weight: 1000;
+  color: color-mix(in srgb, var(--text) 100%, var(--note) 0%);
   opacity: 1;
 }
 
@@ -1301,7 +1305,7 @@ body.dark .cell.box-related {
     --cell-gap: 3px;
     --block-gap-extra: 1px;
     --tile-radius: 10px;
-    --note-font-size: clamp(10px, 2.6vw, 15px);
+  --note-font-size: clamp(11px, 2.9vw, 16px);
     --mobile-grid-size: 560px;
     --mobile-grid-offset-x: 0px;
     --mobile-grid-offset-y: 0px;
@@ -1497,7 +1501,7 @@ body.dark .cell.box-related {
     min-height: 0;
     max-width: none;
     max-height: none;
-    font-size: 17px;
+    font-size: 20px;
     border-radius: 12px;
     justify-self: center;
     align-self: center;
@@ -1512,7 +1516,7 @@ body.dark .cell.box-related {
   }
 
   body.notes-mode .number-pad .num-btn::after {
-    font-size: 15px;
+    font-size: 12px;
     color: color-mix(in srgb, var(--note) 85%, var(--text) 15%);
   }
 
