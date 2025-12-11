@@ -1572,7 +1572,7 @@ body.dark .cell.box-related {
   }
 
   .cell {
-    transition: background 60ms ease, box-shadow 60ms ease, border 60ms ease, transform 80ms ease;
+    transition: none;
   }
 
   .cell.selected {

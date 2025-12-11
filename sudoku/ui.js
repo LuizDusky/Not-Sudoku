@@ -26,7 +26,11 @@ export function createGrid(container, onCellClick) {
       }
       cell.appendChild(notes);
 
-      cell.addEventListener('click', () => onCellClick(r, c));
+      // Use pointerdown to avoid the slight click delay on touch devices.
+      cell.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        onCellClick(r, c);
+      });
       container.appendChild(cell);
       rowCells.push(cell);
     }
