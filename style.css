@@ -74,6 +74,7 @@ body.dark {
 button,
 .pill-option {
   transition: transform 0.12s ease;
+  touch-action: manipulation;
 }
 
 button:active,
@@ -105,6 +106,7 @@ html {
   background: var(--bg);
   height: 100%;
   overflow: hidden;
+  touch-action: manipulation;
 }
 
 .top-brand {
@@ -563,6 +565,19 @@ body.notes-mode .number-pad .num-btn.active {
 .modal-backdrop.show .modal {
   transform: translateY(0) scale(1);
   opacity: 1;
+}
+
+.settings-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: min(82vh, 620px);
+  overflow: hidden;
+}
+
+.settings-modal .settings-groups {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .modal.glass {
