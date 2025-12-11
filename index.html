@@ -40,11 +40,11 @@
             </span>
             <span class="label">New Game</span>
           </button>
-          <button id="clearBtn" class="icon-btn">
+          <button id="settingsBtn" class="icon-btn">
             <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 512 512"><path d="M497.9 142.1c18.7-18.7 18.7-49.1 0-67.9L437.7 14c-18.7-18.7-49.1-18.7-67.9 0L292 91.7l128.3 128.3 77.6-77.9zM256 128L32 352v96h96L352 224 256 128zM73.4 385.4L288 170.7l32.7 32.7L106.1 418.1 73.4 385.4z"/></svg>
+              <svg viewBox="0 0 512 512"><path d="M487.4 315.7l-42.6-24.6c2.1-13.6 2.1-27.6 0-41.2l42.6-24.6c15.1-8.7 20.3-28 11.6-43.1l-40-69.3c-8.7-15.1-28-20.3-43.1-11.6l-42.6 24.6c-11-9.5-23.3-17.4-36.7-23.4V32c0-17.4-14.1-31.5-31.5-31.5h-80c-17.4 0-31.5 14.1-31.5 31.5v49.6c-13.4 6-25.7 13.9-36.7 23.4L72.7 101.3c-15.1-8.7-34.4-3.5-43.1 11.6l-40 69.3c-8.7 15.1-3.5 34.4 11.6 43.1l42.6 24.6c-2.1 13.6-2.1 27.6 0 41.2l-42.6 24.6c-15.1 8.7-20.3 28-11.6 43.1l40 69.3c8.7 15.1 28 20.3 43.1 11.6l42.6-24.6c11 9.5 23.3 17.4 36.7 23.4V480c0 17.4 14.1 31.5 31.5 31.5h80c17.4 0 31.5-14.1 31.5-31.5v-49.6c13.4-6 25.7-13.9 36.7-23.4l42.6 24.6c15.1 8.7 34.4 3.5 43.1-11.6l40-69.3c8.7-15.1 3.5-34.4-11.6-43.1zM256 344c-48.6 0-88-39.4-88-88s39.4-88 88-88 88 39.4 88 88-39.4 88-88 88z"/></svg>
             </span>
-            <span class="label">Clear</span>
+            <span class="label">Settings</span>
           </button>
           <button id="undoBtn" class="icon-btn">
             <span class="icon" aria-hidden="true">
@@ -131,6 +131,36 @@
           <button id="restartBtn" class="ghost">Restart current</button>
           <button id="startNewBtn" class="primary">Start new</button>
           <button id="cancelModalBtn" class="ghost">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="settingsModal">
+      <div class="modal glass">
+        <div class="modal-header">Settings</div>
+        <div class="settings-groups">
+          <div class="settings-section">
+            <div class="settings-title">Preferências</div>
+            <label class="setting-row">
+              <input type="checkbox" id="highlightsSetting" checked />
+              <span class="setting-label">Highlights</span>
+            </label>
+            <label class="setting-row">
+              <input type="checkbox" id="autoNotesSetting" checked />
+              <span class="setting-label">Remover notas automaticamente</span>
+            </label>
+            <label class="setting-row">
+              <input type="checkbox" id="conflictSetting" checked />
+              <span class="setting-label">Highlight de conflitos</span>
+            </label>
+          </div>
+          <div class="settings-section">
+            <div class="settings-title">Stats</div>
+            <div id="statsContainer" class="stats-cards"></div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="closeSettingsBtn" class="primary">Fechar</button>
         </div>
       </div>
     </div>

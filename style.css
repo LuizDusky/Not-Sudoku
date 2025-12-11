@@ -694,6 +694,78 @@ body.notes-mode .number-pad .num-btn.active {
   color: var(--text);
 }
 
+.settings-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-section {
+  background: color-mix(in srgb, var(--panel) 92%, rgba(255, 255, 255, 0.18) 8%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.settings-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.setting-row:last-child {
+  border-bottom: none;
+}
+
+.setting-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--highlight);
+}
+
+.setting-label {
+  font-weight: 600;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  background: color-mix(in srgb, var(--panel) 90%, rgba(255, 255, 255, 0.1) 10%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.stat-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stat-line strong {
+  color: var(--text);
+}
+
 .main-pane {
   padding: 12px 18px;
   display: flex;

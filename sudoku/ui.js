@@ -47,7 +47,8 @@ export function updateGrid(
   hint = null,
   completedDigits = new Set(),
   newlyCompleted = new Set(),
-  activeNumber = null
+  activeNumber = null,
+  highlightsEnabled = true
 ) {
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
@@ -97,13 +98,14 @@ export function updateGrid(
         cell.classList.remove('completed-anim');
       }
 
-      cell.classList.toggle('number-match', !!activeNumber && val === activeNumber);
+      const showMatch = highlightsEnabled && !!activeNumber && val === activeNumber;
+      cell.classList.toggle('number-match', showMatch);
     }
   }
-  highlightSelection(cells, selected, board, activeNumber);
+  highlightSelection(cells, selected, board, activeNumber, highlightsEnabled);
 }
 
-export function highlightSelection(cells, selected, board, activeNumber = null) {
+export function highlightSelection(cells, selected, board, activeNumber = null, highlightsEnabled = true) {
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       const cell = cells[r][c];
@@ -119,12 +121,13 @@ export function highlightSelection(cells, selected, board, activeNumber = null) 
       const val = board ? board.getValue(r, c) : 0;
       const sameNumber = board && selected && val !== 0 && val === board.getValue(selected.row, selected.col);
       const related =
+        highlightsEnabled &&
         !isSelected &&
         (sameRow || sameCol || sameBox || sameNumber);
       cell.classList.toggle('related', related);
-      cell.classList.toggle('row-related', !isSelected && sameRow);
-      cell.classList.toggle('col-related', !isSelected && sameCol);
-      cell.classList.toggle('box-related', !isSelected && sameBox);
+      cell.classList.toggle('row-related', highlightsEnabled && !isSelected && sameRow);
+      cell.classList.toggle('col-related', highlightsEnabled && !isSelected && sameCol);
+      cell.classList.toggle('box-related', highlightsEnabled && !isSelected && sameBox);
     }
   }
 }

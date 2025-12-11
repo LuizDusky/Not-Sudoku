@@ -2,11 +2,41 @@ import { SudokuBoard } from './sudoku/board.js';
 import { generatePuzzle } from './sudoku/generator.js';
 import { createGrid, updateGrid, highlightSelection } from './sudoku/ui.js';
 
+function createDefaultStats() {
+  const base = { played: 0, wins: 0, totalTime: 0, bestTime: null, errors: 0 };
+  return {
+    solved: 0,
+    totalTime: 0,
+    overall: { ...base },
+    difficulties: {
+      easy: { ...base },
+      medium: { ...base },
+      hard: { ...base },
+      expert: { ...base }
+    }
+  };
+}
+
+function mergeStats(base, incoming) {
+  const merged = createDefaultStats();
+  const source = incoming || {};
+  merged.solved = source.solved ?? base.solved ?? 0;
+  merged.totalTime = source.totalTime ?? base.totalTime ?? 0;
+  Object.keys(merged.difficulties).forEach((diff) => {
+    merged.difficulties[diff] = {
+      ...merged.difficulties[diff],
+      ...(source.difficulties?.[diff] || {})
+    };
+  });
+  merged.overall = { ...merged.overall, ...(source.overall || {}) };
+  return merged;
+}
+
 const gridEl = document.getElementById('grid');
 const difficultySelect = document.getElementById('difficultySelect');
 const difficultyRadios = Array.from(document.querySelectorAll('input[name=\"difficulty\"]'));
 const newGameBtn = document.getElementById('newGameBtn');
-const clearBtn = document.getElementById('clearBtn');
+const settingsBtn = document.getElementById('settingsBtn');
 const numberButtons = Array.from(document.querySelectorAll('.num-btn'));
 const notesToggle = document.getElementById('notesToggle');
 const themeToggle = document.getElementById('themeToggle');
@@ -24,11 +54,22 @@ const gameMetaText = document.getElementById('gameMetaText');
 const gameDifficultyEl = document.getElementById('gameDifficulty');
 const notesToggleLabel = document.querySelector('label[for="notesToggle"]');
 const themeToggleLabel = document.querySelector('label[for="themeToggle"]');
+const settingsModal = document.getElementById('settingsModal');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const highlightsSetting = document.getElementById('highlightsSetting');
+const autoNotesSetting = document.getElementById('autoNotesSetting');
+const conflictSetting = document.getElementById('conflictSetting');
+const statsContainer = document.getElementById('statsContainer');
 
 const DEFAULT_PREFS = {
   theme: 'light',
   lastDifficulty: 'medium',
-  stats: { solved: 0, totalTime: 0 },
+  stats: createDefaultStats(),
+  settings: {
+    highlights: true,
+    autoNotes: true,
+    conflictHighlight: true
+  },
   gameState: null
 };
 const STORAGE_KEY = 'sudoku_prefs';
@@ -40,7 +81,8 @@ let notesMode = false;
 let activeNumber = null;
 let timerInterval = null;
 let secondsElapsed = 0;
-let stats = { solved: 0, totalTime: 0 };
+let stats = createDefaultStats();
+let userSettings = { ...DEFAULT_PREFS.settings };
 let dealing = false;
 let loadingGame = false;
 let completedDigits = new Set();
@@ -58,7 +100,12 @@ function readLocalPrefs() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_PREFS };
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_PREFS, ...parsed, stats: { ...DEFAULT_PREFS.stats, ...(parsed.stats || {}) } };
+    return {
+      ...DEFAULT_PREFS,
+      ...parsed,
+      stats: mergeStats(DEFAULT_PREFS.stats, parsed.stats || createDefaultStats()),
+      settings: { ...DEFAULT_PREFS.settings, ...(parsed.settings || {}) }
+    };
   } catch (e) {
     console.error('Failed to read local prefs', e);
     return { ...DEFAULT_PREFS };
@@ -118,7 +165,8 @@ async function loadPreferences() {
   const merged = {
     ...local,
     ...prefs,
-    stats: { ...(local.stats || {}), ...(prefs.stats || {}) }
+    stats: mergeStats(local.stats || createDefaultStats(), prefs.stats || createDefaultStats()),
+    settings: { ...DEFAULT_PREFS.settings, ...(local.settings || {}), ...(prefs.settings || {}) }
   };
   merged.gameState = prefs.gameState || local.gameState || null;
   const savedTheme = merged.theme || 'light';
@@ -128,11 +176,15 @@ async function loadPreferences() {
     r.checked = r.value === difficultySelect.value;
   });
   stats = merged.stats || stats;
+  userSettings = merged.settings || { ...DEFAULT_PREFS.settings };
   if (solvedCountEl) {
-    solvedCountEl.textContent = stats.solved;
+    solvedCountEl.textContent = stats.solved ?? stats.overall?.wins ?? 0;
   }
   updateTotalTimeDisplay();
   applyTheme(savedTheme);
+  applySettings(userSettings);
+  renderSettingsUI();
+  renderStats();
   restored = restoreGameState(merged.gameState);
   if (!restored) {
     updateGameMeta({ difficulty: difficultySelect.value, id: null });
@@ -269,16 +321,20 @@ function computeCompletedDigits() {
 
 function refreshGrid(conflicts = null, hint = null) {
   if (!board) return;
+  const allowConflicts = userSettings.conflictHighlight !== false;
+  if (!allowConflicts) {
+    conflictCache = new Set();
+  }
   if (conflicts instanceof Set) {
     conflictCache = new Set(conflicts);
   }
   const conflictsToUse =
-    conflicts instanceof Set
+    allowConflicts && conflicts instanceof Set
       ? conflictCache
-      : board
+      : allowConflicts && board
       ? new Set(board.computeConflicts())
-      : conflictCache;
-  if (!(conflicts instanceof Set) && board) {
+      : new Set();
+  if (!(conflicts instanceof Set) && board && allowConflicts) {
     conflictCache = new Set(conflictsToUse);
   }
   lastHint = hint;
@@ -289,7 +345,17 @@ function refreshGrid(conflicts = null, hint = null) {
     selected = null;
   }
   const currentActive = cleared ? null : activeNumber;
-  updateGrid(cells, board, selected, conflictsToUse, hint, done, newlyCompleted, currentActive);
+  updateGrid(
+    cells,
+    board,
+    selected,
+    conflictsToUse,
+    hint,
+    done,
+    newlyCompleted,
+    currentActive,
+    userSettings.highlights !== false
+  );
 }
 
 function updateNumberPad(doneSet) {
@@ -320,6 +386,29 @@ function persistStats() {
   updateStatsPrefs(stats);
 }
 
+function recordGameStart(difficulty) {
+  const diffStats = stats.difficulties?.[difficulty] || stats.difficulties.medium;
+  diffStats.played += 1;
+  stats.overall.played += 1;
+}
+
+function recordGameEnd(difficulty, elapsedSeconds, errorsCount) {
+  const diffStats = stats.difficulties?.[difficulty] || stats.difficulties.medium;
+  diffStats.wins += 1;
+  diffStats.totalTime += elapsedSeconds;
+  diffStats.bestTime =
+    diffStats.bestTime === null ? elapsedSeconds : Math.min(diffStats.bestTime, elapsedSeconds);
+  diffStats.errors += errorsCount;
+
+  stats.overall.wins += 1;
+  stats.overall.totalTime += elapsedSeconds;
+  stats.overall.bestTime =
+    stats.overall.bestTime === null ? elapsedSeconds : Math.min(stats.overall.bestTime, elapsedSeconds);
+  stats.overall.errors += errorsCount;
+  stats.solved = stats.overall.wins;
+  stats.totalTime = stats.overall.totalTime;
+}
+
 function setLoadingGame(on) {
   loadingGame = on;
   document.body.classList.toggle('loading-game', on);
@@ -337,6 +426,7 @@ function saveState() {
     theme: themeToggle.checked ? 'dark' : 'light',
     lastDifficulty: difficultySelect.value,
     stats,
+    settings: userSettings,
     gameState: buildGameState()
   };
   writeLocalPrefs(payload);
@@ -381,7 +471,7 @@ function restoreGameState(state) {
       (row) => row.map((vals) => new Set(vals))
     );
     completedDigits = new Set(state.completedDigits || []);
-    const computedConflicts = board.computeConflicts();
+    const computedConflicts = userSettings.conflictHighlight === false ? [] : board.computeConflicts();
     conflictCache = new Set(computedConflicts);
     selected = null;
     difficultySelect.value = state.difficulty || difficultySelect.value;
@@ -440,13 +530,61 @@ function updateTimer() {
 
 function updateTotalTimeDisplay() {
   if (!totalTimeEl) return;
-  const totalSeconds = stats.totalTime || 0;
+  const totalSeconds = stats.totalTime ?? stats.overall?.totalTime ?? 0;
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const parts = [];
   if (hours) parts.push(`${hours}h`);
   parts.push(`${minutes}m`);
   totalTimeEl.textContent = parts.join(' ');
+}
+
+function formatTime(seconds) {
+  if (seconds === null || seconds === undefined) return '—';
+  const s = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+function applySettings(next = userSettings) {
+  userSettings = { ...DEFAULT_PREFS.settings, ...(next || {}) };
+  document.body.classList.toggle('no-highlights', !userSettings.highlights);
+  if (highlightsSetting) highlightsSetting.checked = !!userSettings.highlights;
+  if (autoNotesSetting) autoNotesSetting.checked = !!userSettings.autoNotes;
+  if (conflictSetting) conflictSetting.checked = !!userSettings.conflictHighlight;
+  refreshGrid();
+}
+
+function renderSettingsUI() {
+  applySettings(userSettings);
+}
+
+function renderStats() {
+  if (!statsContainer) return;
+  const diffs = ['easy', 'medium', 'hard', 'expert'];
+  const makeRow = (label, data) => {
+    const winRate = data.played ? Math.round((data.wins / data.played) * 100) : 0;
+    const avgTime = data.wins ? data.totalTime / data.wins : null;
+    return `
+      <div class="stat-card">
+        <div class="stat-label">${label}</div>
+        <div class="stat-line"><span>Jogos</span><strong>${data.played}</strong></div>
+        <div class="stat-line"><span>Vitórias</span><strong>${data.wins} (${winRate || 0}%)</strong></div>
+        <div class="stat-line"><span>Tempo médio</span><strong>${formatTime(avgTime)}</strong></div>
+        <div class="stat-line"><span>Melhor tempo</span><strong>${formatTime(data.bestTime)}</strong></div>
+        <div class="stat-line"><span>Erros</span><strong>${data.errors}</strong></div>
+      </div>
+    `;
+  };
+  const overall = stats.overall || createDefaultStats().overall;
+  const cards = [
+    makeRow('Geral', overall),
+    ...diffs.map((d) => makeRow(d.charAt(0).toUpperCase() + d.slice(1), stats.difficulties?.[d] || createDefaultStats().difficulties[d]))
+  ];
+  statsContainer.innerHTML = cards.join('');
 }
 
 function init() {
@@ -469,7 +607,7 @@ function attachEvents() {
   startNewBtn.addEventListener('click', startNewFromModal);
   restartBtn.addEventListener('click', restartPuzzle);
   cancelModalBtn.addEventListener('click', closeNewGameModal);
-  clearBtn.addEventListener('click', clearBoardChanges);
+  settingsBtn.addEventListener('click', openSettingsModal);
   modal?.addEventListener('click', (e) => {
     if (e.target === modal) {
       closeNewGameModal();
@@ -495,6 +633,24 @@ function attachEvents() {
   themeToggle.addEventListener('change', () => {
     applyTheme(themeToggle.checked ? 'dark' : 'light');
     persistPreferences();
+  });
+  closeSettingsBtn?.addEventListener('click', closeSettingsModal);
+  settingsModal?.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+      closeSettingsModal();
+    }
+  });
+  [highlightsSetting, autoNotesSetting, conflictSetting].forEach((input) => {
+    input?.addEventListener('change', () => {
+      userSettings = {
+        ...userSettings,
+        highlights: highlightsSetting?.checked ?? userSettings.highlights,
+        autoNotes: autoNotesSetting?.checked ?? userSettings.autoNotes,
+        conflictHighlight: conflictSetting?.checked ?? userSettings.conflictHighlight
+      };
+      applySettings(userSettings);
+      saveState();
+    });
   });
   if (notesToggle && notesToggleLabel) {
     setupDraggableToggle(notesToggle, notesToggleLabel, (checked) =>
@@ -531,6 +687,7 @@ async function newGame() {
     nextPuzzle = puzzle;
     board = new SudokuBoard(puzzle, solution);
     board.id = Math.floor(10000 + Math.random() * 90000);
+    recordGameStart(difficulty);
     selected = null;
     setNotesMode(false, { save: false });
     setActiveNumber(null, true);
@@ -547,6 +704,8 @@ async function newGame() {
     redoStack.length = 0;
     refreshGrid();
     updateGameMeta({ difficulty, id: board.id });
+    saveState();
+    renderStats();
   } catch (e) {
     console.error('Failed to start new game', e);
   } finally {
@@ -577,7 +736,7 @@ function handleCellClick(row, col) {
   if (dealing) return;
   pendingNumberClear = false;
   selected = { row, col };
-  highlightSelection(cells, selected, board, activeNumber);
+  highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false);
   lastHint = null;
   const val = board?.getValue(row, col) || 0;
   if (!board || board.isGiven(row, col)) return;
@@ -594,11 +753,13 @@ function handleCellClick(row, col) {
       board.clearNotes(row, col);
     } else {
       board.setValue(row, col, activeNumber);
-      board.clearNotesInPeers(row, col, activeNumber);
+      if (userSettings.autoNotes !== false) {
+        board.clearNotesInPeers(row, col, activeNumber);
+      }
     }
     pushUndo(prev);
   }
-  const conflicts = board.computeConflicts();
+  const conflicts = userSettings.conflictHighlight === false ? new Set() : board.computeConflicts();
   refreshGrid(conflicts);
   saveState();
   checkComplete();
@@ -620,13 +781,13 @@ function handleClickAway(e) {
   if (selected) {
     selected = null;
     pendingNumberClear = activeNumber !== null;
-    highlightSelection(cells, selected, board, activeNumber);
+    highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false);
     return;
   }
   if (activeNumber !== null) {
     setActiveNumber(null, true, true);
     pendingNumberClear = false;
-    highlightSelection(cells, selected, board, activeNumber);
+    highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false);
     return;
   }
   pendingNumberClear = false;
@@ -674,7 +835,7 @@ function undoMove() {
   const prev = undoStack.pop();
   redoStack.push(snapshotBoard());
   restoreBoard(prev);
-  const conflicts = board.computeConflicts();
+  const conflicts = userSettings.conflictHighlight === false ? new Set() : board.computeConflicts();
   refreshGrid(conflicts);
   saveState();
   showStatus('Undo');
@@ -689,7 +850,7 @@ function redoMove() {
   const next = redoStack.pop();
   undoStack.push(snapshotBoard());
   restoreBoard(next);
-  const conflicts = board.computeConflicts();
+  const conflicts = userSettings.conflictHighlight === false ? new Set() : board.computeConflicts();
   refreshGrid(conflicts);
   saveState();
   showStatus('Redo');
@@ -729,7 +890,7 @@ function moveSelection(key) {
     row: Math.min(8, Math.max(0, selected.row + delta[0])),
     col: Math.min(8, Math.max(0, selected.col + delta[1]))
   };
-  highlightSelection(cells, selected, board, activeNumber);
+  highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false);
 }
 
 function setValue(val) {
@@ -751,7 +912,9 @@ function setValue(val) {
       board.clearNotes(selected.row, selected.col);
     } else {
       board.setValue(selected.row, selected.col, val);
-      board.clearNotesInPeers(selected.row, selected.col, val);
+      if (userSettings.autoNotes !== false) {
+        board.clearNotesInPeers(selected.row, selected.col, val);
+      }
       if (val !== board.solution[selected.row][selected.col]) {
         gameStats.errors += 1;
       }
@@ -759,7 +922,7 @@ function setValue(val) {
     gameStats.moves += 1;
     pushUndo(prev);
   }
-  const conflicts = board.computeConflicts();
+  const conflicts = userSettings.conflictHighlight === false ? new Set() : board.computeConflicts();
   refreshGrid(conflicts);
   saveState();
   checkComplete();
@@ -773,7 +936,7 @@ function clearSelectedCell() {
   board.clearNotes(selected.row, selected.col);
   gameStats.moves += 1;
   pushUndo(prev);
-  const conflicts = board.computeConflicts();
+  const conflicts = userSettings.conflictHighlight === false ? new Set() : board.computeConflicts();
   refreshGrid(conflicts);
   saveState();
 }
@@ -793,6 +956,17 @@ function openNewGameModal() {
 
 function closeNewGameModal() {
   modal.classList.remove('show');
+}
+
+function openSettingsModal() {
+  if (!settingsModal) return;
+  renderSettingsUI();
+  renderStats();
+  settingsModal.classList.add('show');
+}
+
+function closeSettingsModal() {
+  settingsModal?.classList.remove('show');
 }
 
 function startNewFromModal() {
@@ -851,10 +1025,11 @@ function clearBoardChanges() {
 function checkComplete() {
   if (board.isSolved()) {
     stopTimer();
-    stats.solved += 1;
-    stats.totalTime += secondsElapsed;
+    const diff = difficultySelect.value || 'medium';
+    recordGameEnd(diff, secondsElapsed, gameStats.errors);
+    renderStats();
     if (solvedCountEl) {
-      solvedCountEl.textContent = stats.solved;
+        solvedCountEl.textContent = stats.solved ?? stats.overall?.wins ?? 0;
     }
     updateTotalTimeDisplay();
     persistStats();
