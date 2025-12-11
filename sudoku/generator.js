@@ -1,6 +1,6 @@
 import { solveBoard } from './solver.js';
 
-const MAX_GENERATION_ATTEMPTS = 5;
+const MAX_GENERATION_ATTEMPTS = 8;
 
 /**
  * Generates a puzzle by creating a solved grid, then removing cells
@@ -29,10 +29,10 @@ function generateSolvedBoard() {
 
 function carvePuzzle(solved, difficulty) {
   const removalMap = {
-    easy: 35,
-    medium: 45,
-    hard: 54,
-    expert: 60
+    easy: 40,
+    medium: 50,
+    hard: 57,
+    expert: 63
   };
   const toRemove = removalMap[difficulty] ?? removalMap.medium;
   const puzzle = cloneBoard(solved);

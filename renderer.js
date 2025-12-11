@@ -565,13 +565,6 @@ function handleCellClick(row, col) {
   highlightSelection(cells, selected, board, activeNumber);
   lastHint = null;
   const val = board?.getValue(row, col) || 0;
-  const shouldSyncActive = activeNumber !== null && val !== 0 && val !== activeNumber;
-  if (shouldSyncActive) {
-    setActiveNumber(val, false, false);
-    highlightSelection(cells, selected, board, activeNumber);
-    // When syncing to a filled cell, skip edits; user can click again to change.
-    if (val !== 0) return;
-  }
   if (!board || board.isGiven(row, col)) return;
   if (notesMode) {
     if (!activeNumber) return;
@@ -879,9 +872,8 @@ function runDealAnimation(puzzle, onComplete) {
     return;
   }
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isTouchPrimary = navigator.maxTouchPoints > 0;
-  const compactViewport = window.matchMedia('(max-width: 900px)').matches;
-  const fastDeal = prefersReducedMotion || (isTouchPrimary && compactViewport);
+  // Keep deal animation everywhere unless the user explicitly prefers less motion.
+  const fastDeal = prefersReducedMotion;
   dealing = true;
   const numbersByVal = Object.fromEntries(numberButtons.map((btn) => [parseInt(btn.dataset.val, 10), btn]));
   const duration = 200;
