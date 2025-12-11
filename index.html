@@ -65,10 +65,12 @@
 
       <main class="main-pane">
         <section class="board-section">
-          <div id="loadingIndicator" class="loading-indicator" role="status" aria-live="polite" aria-hidden="true">
-            <div class="spinner" aria-hidden="true"></div>
-            <span class="message">Carregando novo jogo...</span>
-          </div>
+      <div id="loadingIndicator" class="loading-indicator" role="status" aria-live="polite" aria-hidden="true">
+        <div class="loading-visual" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="sr-only">Carregando novo jogo</span>
+      </div>
           <div id="grid" class="grid"></div>
           <div class="status" id="status"></div>
         </section>

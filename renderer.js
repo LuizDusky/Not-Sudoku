@@ -520,11 +520,15 @@ function attachEvents() {
 
 async function newGame() {
   if (dealing || loadingGame) return;
+  const loadStart = performance.now();
   setLoadingGame(true);
+  closeNewGameModal();
   await wait(30);
   const difficulty = difficultySelect.value;
+  let nextPuzzle = null;
   try {
     const { puzzle, solution } = generatePuzzle(difficulty);
+    nextPuzzle = puzzle;
     board = new SudokuBoard(puzzle, solution);
     board.id = Math.floor(10000 + Math.random() * 90000);
     selected = null;
@@ -532,8 +536,6 @@ async function newGame() {
     setActiveNumber(null, true);
     clearReveals();
     gridEl.classList.add('dealing');
-    document.body.classList.add('dealing-active', 'in-game');
-    document.body.classList.remove('timer-ready');
     stopTimer();
     secondsElapsed = 0;
     updateTimer();
@@ -545,16 +547,29 @@ async function newGame() {
     redoStack.length = 0;
     refreshGrid();
     updateGameMeta({ difficulty, id: board.id });
-    closeNewGameModal();
-    runDealAnimation(puzzle, () => {
-      document.body.classList.remove('dealing-active');
-      document.body.classList.add('timer-ready');
-      startTimer();
-    });
   } catch (e) {
     console.error('Failed to start new game', e);
   } finally {
+    const elapsed = performance.now() - loadStart;
+    const minimum = 2000;
+    if (elapsed < minimum) {
+      await wait(minimum - elapsed);
+    }
     setLoadingGame(false);
+    // Give the overlay time to fade out before dealing.
+    await wait(350);
+    if (nextPuzzle) {
+      gridEl.classList.add('dealing');
+      document.body.classList.add('dealing-active', 'in-game');
+      document.body.classList.remove('timer-ready');
+      runDealAnimation(nextPuzzle, () => {
+        document.body.classList.remove('dealing-active');
+        document.body.classList.add('timer-ready');
+        startTimer();
+      });
+    } else {
+      gridEl.classList.remove('dealing');
+    }
   }
 }
 
@@ -765,7 +780,6 @@ function clearSelectedCell() {
 
 function clearReveals() {
   cells.flat().forEach((cell) => cell.classList.remove('revealed'));
-  gridEl.classList.remove('dealing');
   conflictCache = new Set();
 }
 
@@ -808,8 +822,8 @@ function restartPuzzle() {
   setNotesMode(false, { save: false });
   setActiveNumber(null, true);
   closeNewGameModal();
-  gridEl.classList.add('dealing');
   clearReveals();
+  gridEl.classList.add('dealing');
   runDealAnimation(board.puzzle, () => {
     document.body.classList.remove('dealing-active');
     document.body.classList.add('timer-ready');
