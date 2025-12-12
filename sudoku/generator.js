@@ -32,7 +32,7 @@ function carvePuzzle(solved, difficulty) {
     easy: 45,
     medium: 55,
     hard: 62,
-    expert: 67
+    expert: 70
   };
   const toRemove = removalMap[difficulty] ?? removalMap.medium;
   const puzzle = cloneBoard(solved);

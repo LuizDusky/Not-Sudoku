@@ -775,6 +775,7 @@ function handleCellClick(row, col) {
     if (!activeNumber) return;
     const prev = snapshotBoard();
     board.toggleNote(row, col, activeNumber);
+    gameStats.moves += 1;
     pushUndo(prev);
   } else if (activeNumber) {
     const prev = snapshotBoard();
@@ -934,6 +935,7 @@ function setValue(val) {
   if (notesMode) {
     const prev = snapshotBoard();
     board.toggleNote(selected.row, selected.col, val);
+    gameStats.moves += 1;
     pushUndo(prev);
   } else {
     const prev = snapshotBoard();
