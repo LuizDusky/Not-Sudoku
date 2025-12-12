@@ -571,17 +571,17 @@ function renderStats() {
     return `
       <div class="stat-card">
         <div class="stat-label">${label}</div>
-        <div class="stat-line"><span>Jogos</span><strong>${data.played}</strong></div>
-        <div class="stat-line"><span>Vitórias</span><strong>${data.wins} (${winRate || 0}%)</strong></div>
-        <div class="stat-line"><span>Tempo médio</span><strong>${formatTime(avgTime)}</strong></div>
-        <div class="stat-line"><span>Melhor tempo</span><strong>${formatTime(data.bestTime)}</strong></div>
-        <div class="stat-line"><span>Erros</span><strong>${data.errors}</strong></div>
+        <div class="stat-line"><span>Games</span><strong>${data.played}</strong></div>
+        <div class="stat-line"><span>Wins</span><strong>${data.wins} (${winRate || 0}%)</strong></div>
+        <div class="stat-line"><span>Avg time</span><strong>${formatTime(avgTime)}</strong></div>
+        <div class="stat-line"><span>Best time</span><strong>${formatTime(data.bestTime)}</strong></div>
+        <div class="stat-line"><span>Errors</span><strong>${data.errors}</strong></div>
       </div>
     `;
   };
   const overall = stats.overall || createDefaultStats().overall;
   const cards = [
-    makeRow('Geral', overall),
+    makeRow('Overall', overall),
     ...diffs.map((d) => makeRow(d.charAt(0).toUpperCase() + d.slice(1), stats.difficulties?.[d] || createDefaultStats().difficulties[d]))
   ];
   statsContainer.innerHTML = cards.join('');
