@@ -592,6 +592,11 @@ function preventDoubleTapZoom() {
   document.addEventListener(
     'touchend',
     (e) => {
+      const interactive = e.target.closest('button, .icon-btn, .num-btn, .pill-option, .toggle');
+      if (interactive) {
+        lastTouchEnd = Date.now();
+        return;
+      }
       const now = Date.now();
       if (now - lastTouchEnd < 300) {
         e.preventDefault();
