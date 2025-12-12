@@ -433,9 +433,9 @@ body.dealing-active .num-btn {
 }
 
 body.notes-mode .number-pad .num-btn {
-  --note-grid-inset: 4%;
-  --note-grid-line: color-mix(in srgb, var(--border-strong) 75%, transparent 25%);
-  --note-line-w: 4px;
+  --note-grid-inset: 0%;
+  --note-grid-line: color-mix(in srgb, var(--border-strong) 88%, transparent 12%);
+  --note-line-w: 3px;
   display: grid !important;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
@@ -443,6 +443,7 @@ body.notes-mode .number-pad .num-btn {
   font-size: 0 !important;
   color: transparent !important;
   background-image: none;
+  border-color: transparent;
   
 }
 
@@ -484,7 +485,7 @@ body.notes-mode .number-pad .num-btn::before {
   background-size: var(--cell-size) 100%, 100% var(--cell-size);
   background-position: var(--cell-size) 0, 0 var(--cell-size);
   background-repeat: repeat;
-  opacity: 0.75;
+  opacity: 0.85;
   pointer-events: none;
   z-index: 1;
 }
