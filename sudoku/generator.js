@@ -29,10 +29,10 @@ function generateSolvedBoard() {
 
 function carvePuzzle(solved, difficulty) {
   const removalMap = {
-    easy: 40,
-    medium: 50,
-    hard: 57,
-    expert: 63
+    easy: 45,
+    medium: 55,
+    hard: 62,
+    expert: 67
   };
   const toRemove = removalMap[difficulty] ?? removalMap.medium;
   const puzzle = cloneBoard(solved);
