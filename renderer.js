@@ -602,9 +602,24 @@ function preventDoubleTapZoom() {
   );
 }
 
+function preventPinchZoom() {
+  const blockIfPinch = (e) => {
+    if (e.touches && e.touches.length > 1) {
+      e.preventDefault();
+    }
+  };
+  document.addEventListener('touchstart', blockIfPinch, { passive: false });
+  document.addEventListener('touchmove', blockIfPinch, { passive: false });
+  // Safari-specific pinch gestures
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((evt) => {
+    document.addEventListener(evt, (e) => e.preventDefault());
+  });
+}
+
 function init() {
   cells = createGrid(gridEl, handleCellClick);
   preventDoubleTapZoom();
+  preventPinchZoom();
   attachEvents();
   setupWakeLock();
   loadPreferences().then((restored) => {
