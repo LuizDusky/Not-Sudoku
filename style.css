@@ -17,7 +17,7 @@
   --note: #3f4555;
   --cell-gap: 4px;
   --block-gap-extra: 2px;
-  --block-line: rgba(0, 0, 0, 0.35);
+  --block-line: color-mix(in srgb, #7b879c 65%, #ffffff 35%);
   --block-band: 6px;
   --block-line-width: 2px;
   --tile-bg: color-mix(in srgb, #f3f3f3 82%, #ffffff 18%);
@@ -32,6 +32,7 @@
   --top-pill-height: 40px;
   --top-pill-min-width: 112px;
   --gap1: 5px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body.dark {
@@ -55,6 +56,7 @@ body.dark {
   --tile-border: rgba(255, 255, 255, 0.08);
   --tile-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --tile-active: color-mix(in srgb, #27292d 70%, #2f3237 30%);
+  --block-line: color-mix(in srgb, #050607 85%, transparent);
   --selected-mix: 32%;
   /* Dark mode knob: match the notes toggle pill from the dark reference */
   --toggle-knob: color-mix(in srgb, #d9dce4 82%, #b0b6c3 18%);
@@ -1623,7 +1625,7 @@ body.dark .cell.box-related {
     position: fixed;
     left: var(--gap1);
     right: var(--gap1);
-    bottom: calc(var(--gap1) + var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1));
+    bottom: calc(var(--safe-bottom) + var(--gap1) + var(--bottom-actions-h) + var(--gap1) + var(--mobile-keypad-h) + var(--gap1));
     width: auto;
     max-width: none;
     margin: 0;
@@ -1644,7 +1646,7 @@ body.dark .cell.box-related {
     position: fixed;
     left: var(--gap1);
     right: var(--gap1);
-    bottom: calc(var(--gap1) + var(--bottom-actions-h) + var(--gap1));
+    bottom: calc(var(--safe-bottom) + var(--gap1) + var(--gap1) + var(--bottom-actions-h));
     width: auto;
     max-width: none;
     margin: 0;
@@ -1728,7 +1730,7 @@ body.dark .cell.box-related {
     height: var(--bottom-actions-h);
     align-items: center;
     margin: 0;
-    bottom: var(--gap1);
+    bottom: calc(var(--safe-bottom) + var(--gap1));
     order: 5;
   }
 
