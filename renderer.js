@@ -98,6 +98,7 @@ let wakeLock = null;
 let wakeLockRequested = false;
 let pendingNumberClear = false;
 let saveStateTimer = null;
+let statusTimer = null;
 let puzzleWorker = null;
 let puzzleRequestSeq = 0;
 const pendingPuzzleRequests = new Map();
@@ -1141,7 +1142,16 @@ function checkComplete() {
 
 function showStatus(message) {
   const statusEl = document.getElementById('status');
-  if (statusEl) statusEl.textContent = message;
+  if (!statusEl) return;
+  statusEl.textContent = message;
+  statusEl.classList.add('show');
+  if (statusTimer) {
+    clearTimeout(statusTimer);
+  }
+  statusTimer = window.setTimeout(() => {
+    statusEl.classList.remove('show');
+    statusTimer = null;
+  }, 1600);
 }
 
 function runDealAnimation(puzzle, onComplete) {
