@@ -1021,6 +1021,7 @@ body:not(.timer-ready) .meta-chip.time {
   margin: 0 auto;
   align-items: center;
   justify-items: center;
+  touch-action: none;
 }
 
 .grid > .cell {
@@ -1166,6 +1167,7 @@ body.loading-game .toggles-panel {
   box-shadow: none;
   contain: layout paint;
   overflow: hidden;
+  touch-action: none;
 }
 
 .cell.empty-cell {

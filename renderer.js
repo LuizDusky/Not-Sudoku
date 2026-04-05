@@ -675,44 +675,15 @@ function renderStats() {
   statsContainer.innerHTML = cards.join('');
 }
 
-function preventDoubleTapZoom() {
-  let lastTouchEnd = 0;
-  document.addEventListener(
-    'touchend',
-    (e) => {
-      const interactive = e.target.closest('button, .icon-btn, .num-btn, .pill-option, .toggle');
-      if (interactive) {
-        lastTouchEnd = Date.now();
-        return;
-      }
-      const now = Date.now();
-      if (now - lastTouchEnd < 300) {
-        e.preventDefault();
-      }
-      lastTouchEnd = now;
-    },
-    { passive: false }
-  );
-}
-
-function preventPinchZoom() {
-  const blockIfPinch = (e) => {
-    if (e.touches && e.touches.length > 1) {
-      e.preventDefault();
-    }
-  };
-  document.addEventListener('touchstart', blockIfPinch, { passive: false });
-  document.addEventListener('touchmove', blockIfPinch, { passive: false });
-  // Safari-specific pinch gestures
+function preventPinchGestureZoom() {
   ['gesturestart', 'gesturechange', 'gestureend'].forEach((evt) => {
-    document.addEventListener(evt, (e) => e.preventDefault());
+    document.addEventListener(evt, (e) => e.preventDefault(), { passive: false });
   });
 }
 
 function init() {
   cells = createGrid(gridEl, handleCellClick);
-  preventDoubleTapZoom();
-  preventPinchZoom();
+  preventPinchGestureZoom();
   attachEvents();
   setupWakeLock();
   loadPreferences().then((restored) => {
@@ -726,7 +697,7 @@ function init() {
 
 function attachEvents() {
   document.addEventListener('keydown', handleKeyDown);
-  document.addEventListener('click', handleClickAway);
+  document.addEventListener('pointerdown', handleClickAway, { passive: true });
   newGameBtn.addEventListener('click', openNewGameModal);
   startNewBtn.addEventListener('click', startNewFromModal);
   restartBtn.addEventListener('click', restartPuzzle);
@@ -857,8 +828,9 @@ async function newGame() {
 function handleCellClick(row, col) {
   if (dealing) return;
   pendingNumberClear = false;
+  const previousSelected = selected ? { ...selected } : null;
   selected = { row, col };
-  highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false);
+  highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false, previousSelected);
   lastHint = null;
   const val = board?.getValue(row, col) || 0;
   if (!board || board.isGiven(row, col)) return;
@@ -902,9 +874,10 @@ function handleClickAway(e) {
     return;
   }
   if (selected) {
+    const previousSelected = { ...selected };
     selected = null;
     pendingNumberClear = activeNumber !== null;
-    highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false);
+    highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false, previousSelected);
     return;
   }
   if (activeNumber !== null) {
@@ -1009,11 +982,12 @@ function moveSelection(key) {
     ArrowLeft: [0, -1],
     ArrowRight: [0, 1]
   }[key];
+  const previousSelected = selected ? { ...selected } : null;
   selected = {
     row: Math.min(8, Math.max(0, selected.row + delta[0])),
     col: Math.min(8, Math.max(0, selected.col + delta[1]))
   };
-  highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false);
+  highlightSelection(cells, selected, board, activeNumber, userSettings.highlights !== false, previousSelected);
 }
 
 function setValue(val) {
