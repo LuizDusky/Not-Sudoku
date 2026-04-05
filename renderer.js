@@ -73,6 +73,9 @@ const DEFAULT_PREFS = {
   gameState: null
 };
 const STORAGE_KEY = 'sudoku_prefs';
+const STATE_SAVE_DELAY_MS = 160;
+const LOADING_OVERLAY_MIN_MS = 120;
+const LOADING_OVERLAY_FADE_MS = 120;
 
 let cells = [];
 let board = null;
@@ -94,6 +97,10 @@ let lastHint = null;
 let wakeLock = null;
 let wakeLockRequested = false;
 let pendingNumberClear = false;
+let saveStateTimer = null;
+let puzzleWorker = null;
+let puzzleRequestSeq = 0;
+const pendingPuzzleRequests = new Map();
 
 function readLocalPrefs() {
   try {
@@ -123,9 +130,7 @@ function writeLocalPrefs(prefs) {
 async function getPreferences() {
   if (window.api?.getPreferences) {
     try {
-      const prefs = await window.api.getPreferences();
-      writeLocalPrefs(prefs);
-      return prefs;
+      return await window.api.getPreferences();
     } catch (e) {
       console.error('Failed to load prefs from API, falling back to local', e);
       return readLocalPrefs();
@@ -163,15 +168,16 @@ async function loadPreferences() {
   const prefs = await getPreferences();
   const local = readLocalPrefs();
   const merged = {
-    ...local,
     ...prefs,
-    stats: mergeStats(local.stats || createDefaultStats(), prefs.stats || createDefaultStats()),
-    settings: { ...DEFAULT_PREFS.settings, ...(local.settings || {}), ...(prefs.settings || {}) }
+    ...local,
+    stats: mergeStats(prefs.stats || createDefaultStats(), local.stats || createDefaultStats()),
+    settings: { ...DEFAULT_PREFS.settings, ...(prefs.settings || {}), ...(local.settings || {}) }
   };
-  merged.gameState = prefs.gameState || local.gameState || null;
+  merged.gameState = local.gameState || prefs.gameState || null;
+  writeLocalPrefs(merged);
   const savedTheme = merged.theme || 'light';
   themeToggle.checked = savedTheme === 'dark';
-  difficultySelect.value = prefs.lastDifficulty || 'medium';
+  difficultySelect.value = merged.lastDifficulty || 'medium';
   difficultyRadios.forEach((r) => {
     r.checked = r.value === difficultySelect.value;
   });
@@ -228,7 +234,12 @@ function updateGameMeta(meta) {
 }
 
 window.addEventListener('beforeunload', () => {
-  saveState();
+  if (saveStateTimer) {
+    clearTimeout(saveStateTimer);
+    saveStateTimer = null;
+  }
+  flushState({ localOnly: true });
+  resetPuzzleWorker();
 });
 
 async function requestWakeLock() {
@@ -421,16 +432,93 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function saveState() {
-  const payload = {
+function handlePuzzleWorkerMessage(event) {
+  const { id, ok, puzzle, solution, error } = event.data || {};
+  const request = pendingPuzzleRequests.get(id);
+  if (!request) return;
+  pendingPuzzleRequests.delete(id);
+  if (ok) {
+    request.resolve({ puzzle, solution });
+    return;
+  }
+  request.reject(new Error(error || 'Puzzle generation failed'));
+}
+
+function resetPuzzleWorker(error) {
+  if (puzzleWorker) {
+    puzzleWorker.terminate();
+    puzzleWorker = null;
+  }
+  if (!error) return;
+  pendingPuzzleRequests.forEach(({ reject }) => reject(error));
+  pendingPuzzleRequests.clear();
+}
+
+function getPuzzleWorker() {
+  if (!('Worker' in window)) return null;
+  if (!puzzleWorker) {
+    puzzleWorker = new Worker(new URL('./sudoku/generator-worker.js', import.meta.url), { type: 'module' });
+    puzzleWorker.addEventListener('message', handlePuzzleWorkerMessage);
+    puzzleWorker.addEventListener('error', (event) => {
+      console.error('Puzzle worker failed', event);
+      resetPuzzleWorker(event.error || new Error('Puzzle worker failed'));
+    });
+    puzzleWorker.addEventListener('messageerror', () => {
+      resetPuzzleWorker(new Error('Puzzle worker message error'));
+    });
+  }
+  return puzzleWorker;
+}
+
+async function generatePuzzleAsync(difficulty) {
+  let worker = null;
+  try {
+    worker = getPuzzleWorker();
+  } catch (error) {
+    console.warn('Falling back to main-thread puzzle generation', error);
+  }
+  if (!worker) {
+    return generatePuzzle(difficulty);
+  }
+  const id = ++puzzleRequestSeq;
+  return new Promise((resolve, reject) => {
+    pendingPuzzleRequests.set(id, { resolve, reject });
+    worker.postMessage({ id, difficulty });
+  });
+}
+
+function buildPreferencesPayload() {
+  return {
     theme: themeToggle.checked ? 'dark' : 'light',
     lastDifficulty: difficultySelect.value,
     stats,
     settings: userSettings,
     gameState: buildGameState()
   };
+}
+
+function flushState({ localOnly = false } = {}) {
+  const payload = buildPreferencesPayload();
   writeLocalPrefs(payload);
-  setPreferences(payload);
+  if (localOnly) return;
+  setPreferences(payload).catch((err) => {
+    console.error('Failed to persist preferences', err);
+  });
+}
+
+function saveState({ immediate = false, localOnly = false } = {}) {
+  if (saveStateTimer) {
+    clearTimeout(saveStateTimer);
+    saveStateTimer = null;
+  }
+  if (immediate || localOnly) {
+    flushState({ localOnly });
+    return;
+  }
+  saveStateTimer = window.setTimeout(() => {
+    saveStateTimer = null;
+    flushState();
+  }, STATE_SAVE_DELAY_MS);
 }
 
 function buildGameState() {
@@ -715,11 +803,11 @@ async function newGame() {
   const loadStart = performance.now();
   setLoadingGame(true);
   closeNewGameModal();
-  await wait(30);
+  await wait(16);
   const difficulty = difficultySelect.value;
   let nextPuzzle = null;
   try {
-    const { puzzle, solution } = generatePuzzle(difficulty);
+    const { puzzle, solution } = await generatePuzzleAsync(difficulty);
     nextPuzzle = puzzle;
     board = new SudokuBoard(puzzle, solution);
     board.id = Math.floor(10000 + Math.random() * 90000);
@@ -746,14 +834,12 @@ async function newGame() {
     console.error('Failed to start new game', e);
   } finally {
     const elapsed = performance.now() - loadStart;
-    const minimum = 2000;
-    if (elapsed < minimum) {
-      await wait(minimum - elapsed);
+    if (elapsed < LOADING_OVERLAY_MIN_MS) {
+      await wait(LOADING_OVERLAY_MIN_MS - elapsed);
     }
     setLoadingGame(false);
-    // Give the overlay time to fade out before dealing.
-    await wait(350);
     if (nextPuzzle) {
+      await wait(LOADING_OVERLAY_FADE_MS);
       gridEl.classList.add('dealing');
       document.body.classList.add('dealing-active', 'in-game');
       document.body.classList.remove('timer-ready');
@@ -1103,12 +1189,14 @@ function runDealAnimation(puzzle, onComplete) {
   const fastDeal = prefersReducedMotion;
   dealing = true;
   const numbersByVal = Object.fromEntries(numberButtons.map((btn) => [parseInt(btn.dataset.val, 10), btn]));
-  const duration = 200;
+  const flatCells = cells.flat();
+  const duration = 140;
+  const stagger = Math.max(12, Math.min(24, Math.floor(720 / givens.length)));
 
   if (fastDeal) {
     refreshGrid();
     requestAnimationFrame(() => {
-      cells.flat().forEach((cell) => cell.classList.add('revealed'));
+      flatCells.forEach((cell) => cell.classList.add('revealed'));
       dealing = false;
       gridEl.classList.remove('dealing');
       saveState();
@@ -1145,12 +1233,12 @@ function runDealAnimation(puzzle, onComplete) {
           refreshGrid();
           dealing = false;
           gridEl.classList.remove('dealing');
-          cells.flat().forEach((cell) => cell.classList.add('revealed'));
+          flatCells.forEach((cell) => cell.classList.add('revealed'));
           saveState();
           if (onComplete) onComplete();
         }
       }, duration);
-    }, idx * 55);
+    }, idx * stagger);
   });
 }
 

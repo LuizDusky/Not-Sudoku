@@ -4,6 +4,15 @@
 export function createGrid(container, onCellClick) {
   container.innerHTML = '';
   const cells = [];
+  const fragment = document.createDocumentFragment();
+
+  container.onpointerdown = (e) => {
+    const cell = e.target.closest('.cell');
+    if (!cell || !container.contains(cell)) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    onCellClick(Number(cell.dataset.row), Number(cell.dataset.col));
+  };
+
   for (let r = 0; r < 9; r++) {
     const rowCells = [];
     for (let c = 0; c < 9; c++) {
@@ -18,24 +27,26 @@ export function createGrid(container, onCellClick) {
 
       const notes = document.createElement('div');
       notes.className = 'notes';
+      const noteEls = [];
       for (let i = 1; i <= 9; i++) {
         const note = document.createElement('div');
         note.className = 'note';
         note.textContent = '';
         notes.appendChild(note);
+        noteEls.push(note);
       }
       cell.appendChild(notes);
-
-      // Use pointerdown to avoid the slight click delay on touch devices.
-      cell.addEventListener('pointerdown', (e) => {
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        onCellClick(r, c);
-      });
-      container.appendChild(cell);
+      cell._ui = {
+        hintEl: null,
+        noteEls,
+        valueEl: valueSpan
+      };
+      fragment.appendChild(cell);
       rowCells.push(cell);
     }
     cells.push(rowCells);
   }
+  container.appendChild(fragment);
   return cells;
 }
 
@@ -53,8 +64,9 @@ export function updateGrid(
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       const cell = cells[r][c];
+      const ui = cell._ui;
       const val = board.getValue(r, c);
-      const valueSpan = cell.querySelector('.value');
+      const valueSpan = ui.valueEl;
       valueSpan.textContent = val === 0 ? '' : val;
       valueSpan.classList.toggle('empty', val === 0);
       cell.classList.toggle('empty-cell', val === 0);
@@ -62,32 +74,27 @@ export function updateGrid(
       cell.classList.toggle('given', board.isGiven(r, c));
       cell.classList.toggle('conflict', conflicts.has(`${r},${c}`));
 
-      const noteEls = cell.querySelectorAll('.note');
-      noteEls.forEach((n) => {
-        n.textContent = '';
-        n.classList.remove('active-note');
-      });
       const noteSet = board.notes[r][c];
-      if (val === 0 && noteSet.size) {
-        noteSet.forEach((n) => {
-          const noteEl = noteEls[n - 1];
-          noteEl.textContent = n;
-          if (activeNumber && n === activeNumber) {
-            noteEl.classList.add('active-note');
-          }
-        });
+      const noteEls = ui.noteEls;
+      for (let i = 0; i < noteEls.length; i++) {
+        const noteEl = noteEls[i];
+        const noteValue = val === 0 && noteSet.has(i + 1) ? String(i + 1) : '';
+        noteEl.textContent = noteValue;
+        noteEl.classList.toggle('active-note', noteValue !== '' && activeNumber === i + 1);
       }
 
-      let hintEl = cell.querySelector('.hint');
+      let hintEl = ui.hintEl;
       if (hint && hint.row === r && hint.col === c) {
         if (!hintEl) {
           hintEl = document.createElement('div');
           hintEl.className = 'hint';
           hintEl.textContent = '!';
           cell.appendChild(hintEl);
+          ui.hintEl = hintEl;
         }
+        hintEl.hidden = false;
       } else if (hintEl) {
-        hintEl.remove();
+        hintEl.hidden = true;
       }
 
       const isCompleted = completedDigits.has(val);
@@ -106,6 +113,7 @@ export function updateGrid(
 }
 
 export function highlightSelection(cells, selected, board, activeNumber = null, highlightsEnabled = true) {
+  const selectedValue = selected && board ? board.getValue(selected.row, selected.col) : 0;
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       const cell = cells[r][c];
@@ -119,7 +127,7 @@ export function highlightSelection(cells, selected, board, activeNumber = null, 
       cell.classList.toggle('selected', isSelected);
 
       const val = board ? board.getValue(r, c) : 0;
-      const sameNumber = board && selected && val !== 0 && val === board.getValue(selected.row, selected.col);
+      const sameNumber = board && selected && selectedValue !== 0 && val !== 0 && val === selectedValue;
       const related =
         highlightsEnabled &&
         !isSelected &&

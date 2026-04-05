@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs/promises');
 
 let mainWindow;
 
@@ -15,18 +15,18 @@ const defaultPrefs = {
   gameState: null
 };
 
-function loadPreferences() {
+async function loadPreferences() {
   try {
-    const data = fs.readFileSync(prefPath(), 'utf-8');
+    const data = await fs.readFile(prefPath(), 'utf-8');
     return { ...defaultPrefs, ...JSON.parse(data) };
   } catch {
     return { ...defaultPrefs };
   }
 }
 
-function savePreferences(prefs) {
+async function savePreferences(prefs) {
   try {
-    fs.writeFileSync(prefPath(), JSON.stringify(prefs, null, 2));
+    await fs.writeFile(prefPath(), JSON.stringify(prefs, null, 2));
   } catch (err) {
     console.error('Failed to save preferences', err);
   }
@@ -72,20 +72,20 @@ app.on('window-all-closed', () => {
   }
 });
 
-ipcMain.handle('prefs:get', () => {
+ipcMain.handle('prefs:get', async () => {
   return loadPreferences();
 });
 
-ipcMain.handle('prefs:set', (_event, update) => {
-  const merged = { ...loadPreferences(), ...update };
-  savePreferences(merged);
+ipcMain.handle('prefs:set', async (_event, update) => {
+  const merged = { ...(await loadPreferences()), ...update };
+  await savePreferences(merged);
   return merged;
 });
 
-ipcMain.handle('prefs:stats', (_event, statsUpdate) => {
-  const prefs = loadPreferences();
+ipcMain.handle('prefs:stats', async (_event, statsUpdate) => {
+  const prefs = await loadPreferences();
   const stats = { ...prefs.stats, ...statsUpdate };
   const merged = { ...prefs, stats };
-  savePreferences(merged);
+  await savePreferences(merged);
   return stats;
 });
